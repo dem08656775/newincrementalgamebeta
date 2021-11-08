@@ -119,6 +119,7 @@ Vue.createApp({
 
       shinepersent:0,
       memory:0,
+      trophynumber: new Array(10).fill(null).map(() => false),
       smalltrophy:0,
       worldopened:new Array(10).fill(null).map(() => false),
 
@@ -388,7 +389,7 @@ Vue.createApp({
       this.time = Date.now()
       this.activechallengebonuses = (this.player.challengebonuses.includes(4) || !this.player.onchallenge)?this.player.challengebonuses:[]
 
-      this.checktrophies()
+      //this.checktrophies()
       this.checkmemories()
       this.checkworlds()
       this.countsmalltrophies()
@@ -1127,16 +1128,16 @@ Vue.createApp({
       this.world = i
     },
     shrinkworld(i){
-      if(4>this.counttrophies(i)){
+      if(4>this.trophynumber[i]){
         alert("実績が4つ未満なので、世界を収縮できません。")
         return
       }
-      if(this.players[i].remember>=this.counttrophies(i)){
+      if(this.players[i].remember>=this.trophynumber[i]){
         alert("実績が思い出より多くありません。")
         return
       }
       if(confirm("世界"+(i+1)+"を収縮させ、記憶を思い出に変化させますか？収縮した世界は最初からになります。")){
-        let u = this.counttrophies(i)
+        let u = this.trophynumber[i]
         let r = this.checkremembers()
         this.players[i] = initialData()
         this.players[i].remember = u
@@ -1290,14 +1291,14 @@ Vue.createApp({
       if(this.player.acceleratorsBought[7].greaterThan(0))this.player.smalltrophies[23] = true
       if(this.player.levelresettime.greaterThan(200))this.player.smalltrophies[24] = true
       if(this.player.levelresettime.greaterThan(999))this.player.smalltrophies[25] = true
-      //if(this.player.challengecleared.includes(128))this.player.smalltrophies[26] = true
-      //if(this.player.challengecleared.includes(64))this.player.smalltrophies[27] = true
-      //if(this.player.challengecleared.includes(32))this.player.smalltrophies[28] = true
-      //if(this.player.challengecleared.includes(16))this.player.smalltrophies[29] = true
-      //if(this.player.challengecleared.includes(8))this.player.smalltrophies[30] = true
-      //if(this.player.challengecleared.includes(4))this.player.smalltrophies[31] = true
-      //if(this.player.challengecleared.includes(2))this.player.smalltrophies[32] = true
-      //if(this.player.challengecleared.includes(1))this.player.smalltrophies[33] = true
+      if(this.player.challengecleared.includes(128))this.player.smalltrophies[26] = true
+      if(this.player.challengecleared.includes(64))this.player.smalltrophies[27] = true
+      if(this.player.challengecleared.includes(32))this.player.smalltrophies[28] = true
+      if(this.player.challengecleared.includes(16))this.player.smalltrophies[29] = true
+      if(this.player.challengecleared.includes(8))this.player.smalltrophies[30] = true
+      if(this.player.challengecleared.includes(4))this.player.smalltrophies[31] = true
+      if(this.player.challengecleared.includes(2))this.player.smalltrophies[32] = true
+      if(this.player.challengecleared.includes(1))this.player.smalltrophies[33] = true
       if(this.player.challengecleared.length>=32)this.player.smalltrophies[34] = true
       if(this.player.challengecleared.length>=64)this.player.smalltrophies[35] = true
       if(this.player.challengecleared.length>=96)this.player.smalltrophies[36] = true
@@ -1333,7 +1334,8 @@ Vue.createApp({
       for(let i=0;i<8;i++){
         if(this.players[index].trophies[i])cnt++;
       }
-      return cnt
+      this.trophynumber[index] = cnt
+
     },
     countsmalltrophies(index){
       let cnt = 0;
@@ -1346,8 +1348,9 @@ Vue.createApp({
       let cnt = 0;
 
       for(let i=0;i<10;i++){
+        this.counttrophies(i)
         if(this.world==i) continue
-        cnt += this.counttrophies(i)
+        cnt += this.trophynumber[i]
       }
       this.memory = cnt
     },

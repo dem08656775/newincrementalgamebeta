@@ -360,7 +360,7 @@
 				<div>
 					記憶は、他世界での実績の個数の合計です。記憶が多くなるほど、発生器の生産量が増加します。
 				</div>
-				<div v-if="counttrophies(0)>=6">
+				<div v-if="trophynumber[0]>=6">
 					合計思い出: {{ checkremembers() }}
 					<button type="button"  v-if="false" @click="spendremember()">
 						思い出消費
@@ -373,13 +373,13 @@
 					<button type="button" class="wdbutton" :class="{ 'selected': world == i-1 , 'unavailable': !worldopened[i-1] }" @click="moveworld(i-1)">
 						世界 {{ i }}
 					</button>
-					<button type="button" v-if="counttrophies(0)>=6 && world==0 && i!=1" class="wdbutton" :class="{'unavailable': players[i-1].remember >= counttrophies(i-1) ||  counttrophies(i-1) < 4}" @click="shrinkworld(i-1)">
+					<button type="button" v-if="trophynumber[0]>=6 && world==0 && i!=1" class="wdbutton" :class="{'unavailable': players[i-1].remember >= trophynumber[i-1] ||  trophynumber[i-1] < 4}" @click="shrinkworld(i-1)">
 						収縮
 					</button>
 					<span>
-						記憶: {{ counttrophies(i-1) }}
+						記憶: {{ trophynumber[i-1] }}
 					</span>
-					<span v-if="counttrophies(0)>=6">
+					<span v-if="trophynumber[0]>=6">
 						思い出:{{ players[i-1].remember }}
 					</span>
 				</div>
@@ -391,6 +391,9 @@
 				</div>
 			</div>
 			<div v-show="player.currenttab == 'trophy'">
+				<button type="button" @click="checktrophies()">
+					実績更新
+				</button>
 				実績
 				<div class="levelitem" v-for="i in 8" :key="i">
 					<button type="button" class="trbutton" :class="{ 'unavailable': !player.trophies[i-1] }" >
