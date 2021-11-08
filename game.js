@@ -126,6 +126,7 @@ Vue.createApp({
       world:0,
 
       time:0,
+      diff:0,
 
 
     }
@@ -384,8 +385,9 @@ Vue.createApp({
     },
     update() {
 
-      let diff = Date.now()-this.time-this.player.tickspeed
-      console.log(diff+this.player.tickspeed)
+      let diffm = this.diff
+      this.diff = Date.now()-this.time-this.player.tickspeed
+      console.log(this.diff+this.player.tickspeed)
       this.time = Date.now()
       this.activechallengebonuses = (this.player.challengebonuses.includes(4) || !this.player.onchallenge)?this.player.challengebonuses:[]
 
@@ -486,7 +488,7 @@ Vue.createApp({
       }
 
 
-      setTimeout(this.update, Math.max(this.player.tickspeed-diff,1));
+      setTimeout(this.update, Math.max(this.player.tickspeed-(this.diff+diffm)/2,1));
     },
     exportsave(){
       this.exported = btoa(JSON.stringify(this.players))
@@ -1388,6 +1390,8 @@ Vue.createApp({
 
     this.checkmemories();
     this.checkworlds();
+
+    this.time = Date.now()
 
 
     setTimeout(this.update, this.player.tickspeed);
