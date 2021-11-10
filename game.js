@@ -128,6 +128,8 @@ Vue.createApp({
       time:0,
       diff:0,
 
+      fps:60,
+      rendertime:0,
 
     }
   },
@@ -182,6 +184,20 @@ Vue.createApp({
 
     configshowmult(){
       this.showmult = !this.showmult
+    },
+    configfps(){
+      if (this.fps >= 60)
+        this.fps = 10
+      else if (this.fps >= 10)
+        this.fps = 1
+      else
+        this.fps = 60
+    },
+    currenttimeid(){
+      return Math.floor(Date.now() * this.fps * 0.001) * 1000 + this.rendertime
+    },
+    rerender(){
+      this.rendertime = (this.rendertime + 1) % 1000
     },
     softCap(num,cap){
       if(num.lessThanOrEqualTo(cap)) return num;
@@ -387,7 +403,7 @@ Vue.createApp({
 
       let diffm = this.diff
       this.diff = Date.now()-this.time-this.player.tickspeed
-      console.log(this.diff+this.player.tickspeed)
+      // console.log(this.diff+this.player.tickspeed)
       this.time = Date.now()
       this.activechallengebonuses = (this.player.challengebonuses.includes(4) || !this.player.onchallenge)?this.player.challengebonuses:[]
 
@@ -668,6 +684,7 @@ Vue.createApp({
         if(!this.player.onchallenge || this.player.challengebonuses.includes(4))this.activechallengebonuses = this.player.challengebonuses
       this.calcaccost()
       this.calcdgcost()
+      this.rerender()
     },
     changeTab(tabname){
       this.player.currenttab = tabname;
@@ -857,6 +874,7 @@ Vue.createApp({
           this.players[i] = initialData()
         }
       }
+      this.rerender()
     },
     calcgainlevel(){
       let dividing = 19-this.player.rank.add(2).log2()
@@ -951,7 +969,7 @@ Vue.createApp({
         if(this.activechallengebonuses.includes(1))this.player.accelerators[0] = new Decimal(10)
         if(this.player.rankchallengebonuses.includes(0))this.player.money = this.player.money.add(new Decimal("1e9"))
         if(this.player.rankchallengebonuses.includes(1))this.player.accelerators[0] = this.player.accelerators[0].add(256)
-
+        this.rerender()
       }
     },
     calcgainrank(){
@@ -1030,7 +1048,7 @@ Vue.createApp({
         if(this.activechallengebonuses.includes(1))this.player.accelerators[0] = new Decimal(10)
         if(this.player.rankchallengebonuses.includes(0))this.player.money = this.player.money.add(new Decimal("1e9"))
         if(this.player.rankchallengebonuses.includes(1))this.player.accelerators[0] = this.player.accelerators[0].add(256)
-
+        this.rerender()
       }
     },
     calcchallengeid(){
@@ -1119,6 +1137,7 @@ Vue.createApp({
             new Decimal(10).pow(this.player.generatorsBought[i].add(i + 1).mul(i + 1))
           }
         }
+        this.rerender()
       }
     },
     gettrophyname(i){
