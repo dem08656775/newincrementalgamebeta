@@ -24,6 +24,10 @@ function Shinedata(){
      return 0
    }
 
+   this.getfp = function(stage){
+     return 1/1000000 * stage
+   }
+
    this.getmaxshine = function(clear){
      if(clear>=32*8-1) return 10000000
      if(clear>=32*7) return 3000000
@@ -47,18 +51,27 @@ function Shinedata(){
      return 0
    }
 
+   this.getmaxfl = function(stage){
+     return stage * stage * 2
+     //max:2097152
+   }
+
    this.shineshopcost = [
      50000,
      100000,
-     100000
+     100000,
+     300000,
+     300000,
+     5000000,
    ]
 
    this.rankrewardtext = [
      "モード型登録",
      "効力型登録1",
-     "効力型登録2"
+     "効力型登録2",
+     "上位効力型登録1",
+     "上位効力型登録2",
+     "鋳片型効力",
    ]
-
-
 
 }

@@ -1,4 +1,6 @@
 const version = 2;
+const trophynum = 12;
+const setchipkind = 10;
 const setchipnum = 100;
 
 const initialData = () => {
@@ -10,9 +12,16 @@ const initialData = () => {
     token: 0,
     shine: 0,
     brightness: 0,
+    flicker: 0,
+
+    shineloader:new Array(8).fill(null).map(() => 0),
+    brightloader:new Array(8).fill(null).map(() => 0),
 
     rank:new Decimal(0),
     rankresettime: new Decimal(0),
+
+    crown:new Decimal(0),
+    crownresettime: new Decimal(0),
 
     ranktoken:0,
 
@@ -54,32 +63,61 @@ const initialData = () => {
       new Decimal('1e164'),
       new Decimal('1e225'),
       new Decimal('1e316'),
-      new Decimal('1e423'),
+      new Decimal('1e443'),
       new Decimal('1e612')
     ],
 
     darklevel:new Decimal(0),
 
+    lightmoney:new Decimal(0),
+
+    lightgenerators: new Array(8).fill(null).map(() => new Decimal(0)),
+    lightgeneratorsBought: new Array(8).fill(null).map(() => new Decimal(0)),
+    lightgeneratorsCost: [
+      new Decimal('1e200'),
+      new Decimal('1e216'),
+      new Decimal('1e281'),
+      new Decimal('1e456'),
+      new Decimal('1e825'),
+      new Decimal('1e1496'),
+      new Decimal('1e2601'),
+      new Decimal('1e4296')
+    ],
+
     tickspeed: 1000,
+    accelevel: 0,
+    accelevelused:0,
     saveversion: version,
 
     currenttab: 'basic',
     tweeting:['money'],
+
     onchallenge:false,
     challenges:[],
     challengecleared:[],
     challengebonuses:[],
 
-    boughttype:[false,false,false],
+    challengeweight:new Array(20).fill(null).map(() => 0),
+    challengeweightvalue:new Array(20).fill(null).map(() => 0),
+
+    onpchallenge: false,
+    pchallenges:[],
+    pchallengecleared:new Array(1024).fill(null).map(() => 0),
+    prchallengecleared:new Array(1024).fill(null).map(() => 0),
+
+    boughttype:[false,false,false,false,false,false],
     setmodes: new Array(8).fill(null).map((_, i) => i),
     setchallengebonusesfst:[],
     setchallengebonusessnd:[],
+    setrankchallengebonusesfst:[],
+    setrankchallengebonusessnd:[],
 
     rankchallengecleared:[],
     rankchallengebonuses:[],
 
-    trophies: new Array(8).fill(null).map(() => false),
+    trophies: new Array(trophynum).fill(null).map(() => false),
     smalltrophies: new Array(100).fill(null).map(() => false),
+    smalltrophies2nd: new Array(100).fill(null).map(() => false),
 
     levelitems:[0,0,0,0,0],
     levelitembought: 0,
@@ -87,8 +125,16 @@ const initialData = () => {
     remember: 0,
     rememberspent: 0,
 
-    chip:[0,0,0,0],
-    setchip: new Array(100).fill(setchipnum).map(() => 0),
+    chip: new Array(setchipkind).fill(0).map(() => 0),
+    setchip: new Array(setchipnum).fill(0).map(() => 0),
+    disabledchip: new Array(setchipnum).fill(0).map(() => false),
+    spendchip:new Array(setchipkind).fill(0).map(() => 0),
+
+    statue: new Array(setchipkind).fill(0).map(() => 0),
+
+    setchiptypefst:　new Array(100).fill(setchipnum).map(() => 0),
+
+    worldpipe:new Array(10).fill(null).map(() => 0)
 
   }
 }
@@ -127,17 +173,27 @@ Vue.createApp({
 
       shinepersent:0,
       brightpersent:0,
+      flickerpersent:0,
+
       memory:0,
+
       trophynumber: new Array(10).fill(null).map(() => false),
       smalltrophy:0,
+      eachpipedsmalltrophy:new Array(10).fill(null).map(() => 0),
+      pipedsmalltrophy:0,
       worldopened:new Array(10).fill(null).map(() => false),
 
-      chipused:[0,0,0,0],
+
+
+      chipused:new Array(setchipkind).fill(null).map(() => 0),
+
+      pchallengestage:0,
 
       world:0,
 
       time:0,
       diff:0,
+
 
 
     }
@@ -162,9 +218,16 @@ Vue.createApp({
         tweetText += '裏ポイント:' + this.player.darkmoney +
         '(' + this.player.darkmoney.toExponential().replace('+', '%2B') + ')%0A';
       }
+      if(this.player.tweeting.includes('lightmoney')){
+        tweetText += '天上ポイント:' + this.player.lightmoney +
+        '(' + this.player.lightmoney.toExponential().replace('+', '%2B') + ')%0A';
+      }
 
       if(this.player.tweeting.includes('level')){
         tweetText += '段位:' + this.player.level + '%0A';
+      }
+      if(this.player.tweeting.includes('darklevel')){
+        tweetText += '裏段位:' + this.player.darklevel + '%0A';
       }
       if(this.player.tweeting.includes('achieved')){
         tweetText += '挑戦達成:' + this.player.challengecleared.length + '%0A';
@@ -172,12 +235,22 @@ Vue.createApp({
       if(this.player.tweeting.includes('rankachieved')){
         tweetText += '上位挑戦達成:' + this.player.rankchallengecleared.length + '%0A';
       }
+      if(this.player.tweeting.includes('pachieved')){
+        tweetText += '完全挑戦段階:' + this.pchallengestage + '%0A';
+      }
       if(this.player.tweeting.includes('rank')){
         tweetText += '階位:' + this.player.rank + '%0A';
       }
       if(this.player.tweeting.includes('levelitemboughttime')){
         tweetText += '段位効力購入:' + this.player.levelitembought+ '%0A';
       }
+      if(this.player.tweeting.includes('crown')){
+        tweetText += '冠位:' + this.player.crown + '%0A';
+      }
+      if(this.player.tweeting.includes('crownresettime')){
+        tweetText += '冠位リセット:' + this.player.crownresettime +　'%0A';
+      }
+
       let tweetUrl = 'dem08656775.github.io/newincrementalgame';
       let tweetHashtag = '新しい放置ゲーム';
 
@@ -190,6 +263,135 @@ Vue.createApp({
     }
   },
   methods: {
+
+    exportsave(){
+      this.exported = btoa(JSON.stringify(this.players))
+    },
+    exportsavefile(){
+      let result = btoa(JSON.stringify(this.players))
+      const file = new Blob([result], {type: 'text/plain'})
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(file)
+      a.download = `newincremantal_savedata${new Date()}.txt`
+      a.click()
+    },
+    importsave(){
+      let input = window.prompt("データを入力","")
+      if(input.length<=50){
+        console.log("returned")
+        return
+      }
+      let k = atob(input).charAt(0)
+      console.log(k)
+      if(k=='{') return
+      localStorage.setItem("playerStoredb",input)
+      this.dataload()
+      this.load(0)
+    },
+    save() {
+
+      this.players[this.world] = this.player
+
+      localStorage.setItem("playerStoredb", btoa(JSON.stringify(this.players)));
+
+      console.log("save succeeded"+Date.now())
+    },
+    dataload(){
+      if(!localStorage.getItem("playerStoredb")) return
+      console.log(atob(localStorage.getItem("playerStoredb")))
+      this.players = JSON.parse(atob(localStorage.getItem("playerStoredb")))
+
+      for(let i=0;i<10;i++){
+
+        saveData = Object.assign(initialData(),this.players[i])
+
+        while(saveData.trophies.length<trophynum){
+          saveData.trophies.push(false)
+        }
+
+
+        while(saveData.boughttype.length<6){
+          saveData.boughttype.push(false)
+        }
+
+        while(saveData.chip.length<setchipkind){
+          saveData.chip.push(0)
+        }
+
+        while(saveData.statue.length<setchipkind){
+          saveData.statue.push(0)
+        }
+
+
+        this.players[i] = saveData
+      }
+
+    },
+    load(world) {
+
+      saveData = this.players[world]
+      this.world = world
+      console.log(saveData)
+
+      this.player = {
+          money: new Decimal(saveData.money),
+          level: new Decimal(saveData.level),
+          levelresettime: new Decimal(saveData.levelresettime),
+          maxlevelgained: new Decimal(saveData.maxlevelgained ?? 1),
+
+
+          rank: new Decimal(saveData.rank ?? 0),
+          rankresettime: new Decimal(saveData.rankresettime ?? 0),
+
+          crown: new Decimal(saveData.crown ?? 0),
+          crownresettime: new Decimal(saveData.crownresettime ?? 0),
+
+          generators: saveData.generators.map(v => new Decimal(v)),
+          generatorsBought: saveData.generatorsBought.map(v => new Decimal(v)),
+          generatorsCost: saveData.generatorsCost.map(v => new Decimal(v)),
+
+          accelerators: saveData.accelerators.map(v => new Decimal(v)),
+          acceleratorsBought: saveData.acceleratorsBought.map(v => new Decimal(v)),
+          acceleratorsCost: saveData.acceleratorsCost.map(v => new Decimal(v)),
+
+          darkmoney: new Decimal(saveData.darkmoney),
+
+          darkgenerators: saveData.darkgenerators.map(v => new Decimal(v)),
+          darkgeneratorsBought: saveData.darkgeneratorsBought.map(v => new Decimal(v)),
+          darkgeneratorsCost: saveData.darkgeneratorsCost.map(v => new Decimal(v)),
+
+          lightmoney: new Decimal(saveData.lightmoney ?? 0),
+
+          lightgenerators: saveData.lightgenerators.map(v => new Decimal(v)),
+          lightgeneratorsBought: saveData.lightgeneratorsBought.map(v => new Decimal(v)),
+          lightgeneratorsCost: saveData.lightgeneratorsCost.map(v => new Decimal(v)),
+
+          darklevel: new Decimal(saveData.darklevel),
+
+
+      };
+
+      this.player = Object.assign(saveData,this.player)
+
+      if(!this.player.onchallenge || this.player.challengebonuses.includes(4))this.activechallengebonuses = this.player.challengebonuses
+
+      this.checktrophies()
+      this.checkmemories()
+      this.checkworlds()
+      this.countsmalltrophies()
+      this.calccommonmult()
+      this.findhighestgenerator()
+
+      this.checkpipedsmalltrophies()
+
+      this.countpchallengecleared()
+
+      this.calcgncost()
+      this.calcaccost()
+      this.calcdgcost()
+      this.calclgcost()
+      this.checkusedchips()
+    },
 
     configshowmult(){
       this.showmult = !this.showmult
@@ -208,11 +410,27 @@ Vue.createApp({
       return cap.mul(capped).min(num)
     },
 
+    calcgncost(){
+      for(let i=0;i<8;i++){
+        let p = i === 0 ?
+        this.player.generatorsBought[0] :
+        this.player.generatorsBought[i].add(i + 1).mul(i + 1)
+        if(this.player.onchallenge && this.player.challenges.includes(1) && this.player.generatorsBought[i].gt(0)){
+          p = p.mul(2)
+        }
+        p = p.sub(this.eachpipedsmalltrophy[0]*0.2)
+
+        this.player.generatorsCost[i] = new Decimal(10).pow(p)
+
+      }
+    },
+
     calcaccost(){
       for(let i=0;i<8;i++){
         let p = this.player.acceleratorsBought[i].add(1)
         p = p.mul(p.add(1)).div(2)
         p = p.mul(i === 0 ? 1:new Decimal(10).mul(new Decimal(2).pow(i-1)))
+        p = p.sub(this.eachpipedsmalltrophy[3]*0.2*(i+1))
         this.player.acceleratorsCost[i] = p.pow_base(10)
       }
     },
@@ -221,7 +439,17 @@ Vue.createApp({
         let p = 100 + (i==0?0:(i+1)*(i+1)*(i+1))
         let q = this.player.darkgeneratorsBought[i].mul(i+1).mul(i+1)
         q = q.add(p)
+        q = q.sub(this.eachpipedsmalltrophy[8]*0.02*(i+1)*(i+1))
         this.player.darkgeneratorsCost[i] = new Decimal(10).pow(q)
+      }
+    },
+
+    calclgcost(){
+      for(let i=0;i<8;i++){
+        let p = 200 + (i==0?0:(i+1)*(i+1)*(i+1)*(i+1))
+        let q = this.player.lightgeneratorsBought[i].mul(i+1).mul(i+1).mul(i+1)
+        q = q.add(p)
+        this.player.lightgeneratorsCost[i] = new Decimal(10).pow(q)
       }
     },
 
@@ -240,28 +468,51 @@ Vue.createApp({
         mult = mult.mul(new Decimal(3))
       }
 
-      mult = mult.mul(1+this.smalltrophy*0.01+this.memory*0.25)
+      if(this.player.onpchallenge&&this.player.pchallenges.includes(0)){
+        mult = mult.div(100)
+      }
+
+      let x1 = 0.25
+      let x2 = 12
+
+      if(this.player.onpchallenge && this.player.pchallenges.includes(7)){
+        x1 = 1.0/81
+        x2 = 27
+      }
+
+      mult = mult.mul(1+this.smalltrophy*0.01+this.memory*x1)
 
       if(this.player.rankchallengebonuses.includes(11)){
-        mult = mult.mul(new Decimal(2).pow(new Decimal(this.memory).div(12)))
+        mult = mult.mul(new Decimal(2).pow(new Decimal(this.memory).div(x2)))
       }
+
+      mult = mult.mul(1+Math.sqrt(this.pipedsmalltrophy))
 
       if(this.player.onchallenge && this.player.rankchallengebonuses.includes(4)){
         mult = mult.mul(1+this.player.challenges.length*0.25)
       }
-
-      if(this.player.darkmoney.greaterThanOrEqualTo(1)){
-        mult = mult.mul(new Decimal(this.player.darkmoney.add(10).log10()).pow(1+this.player.setchip[40]*0.1))
+      if(!(this.player.onpchallenge && this.player.pchallenges.includes(8))){
+        if(this.player.darkmoney.greaterThanOrEqualTo(1)){
+          mult = mult.mul(new Decimal(this.player.darkmoney.add(10).log10()).pow(1+this.player.setchip[40]*0.1))
+        }
       }
 
       mult = mult.mul(this.multbyac)
       if(this.multbyac.gt(1)) mult = mult.mul(this.multbyac)
 
-      mult = mult.mul(1+this.player.setchip[0]*0.05)
+      mult = mult.mul(1+this.player.setchip[0]*0.1)
+
+      camp = this.player.accelevelused
 
       let d = new Date()
-      if(d.getMonth()==0&&d.getDate()<=7)mult = mult.mul(5)//新年キャンペーン
-      if(d.getMonth()==1&&8<=d.getDate()&&d.getDate()<=14)mult = mult.mul(5)//バレンタインキャンペーン
+      if(d.getMonth()==4&&3<=d.getDate()&&d.getDate()<=7)camp = camp + 1//ゴールデンウィークキャンペーン
+      //if(d.getMonth()==0&&d.getDate()<=7)camp = camp + 1//新年キャンペーン
+      //if(d.getMonth()==1&&8<=d.getDate()&&d.getDate()<=14)camp = camp + 1//バレンタインキャンペーン
+      //if((d.getMonth()==1&&25<=d.getDate()) || ((d.getMonth()==2&&d.getDate()<=3)))camp = camp + 1//桃の節句キャンペーン
+      //if((d.getMonth()==6&&27<=d.getDate()) || ((d.getMonth()==7&&d.getDate()<27)))camp = camp + 2//1周年キャンペーン
+
+      if(camp>7)camp=7
+      mult = mult.mul(1 + 4 * camp)
 
       this.commonmult = mult
     },
@@ -272,9 +523,18 @@ Vue.createApp({
         mult = mult.mul(new Decimal(10).pow((i + 1) * (i - to)))
       }
 
-      let lv = this.player.level.pow(1+0.5*this.player.setchip[19])
+      let lv = new Decimal(this.player.level.pow(1+0.5*this.player.setchip[19]).add(2).log2())
 
-      mult = mult.mul(new Decimal(lv.add(2).log2()).pow(i - to))
+
+      let rk = this.player.rank.add(2).div(262142).log2()
+      rk += new Decimal(this.player.rank.add(2).log2()).log2()*this.player.setchip[23]
+      mult = mult.mul(new Decimal(lv.pow((i - to) * (1 + Math.max(rk,0) * 0.05))))
+
+      if(this.player.onpchallenge && this.player.pchallenges.includes(3) && mult.gt("1e-100")){
+        let b = Math.floor(mult.log10()/6)
+        mult = new Decimal(10).pow(b*6)
+      }
+
 
       return mult
     },
@@ -305,14 +565,22 @@ Vue.createApp({
           mult = mult.mul(this.player.maxlevelgained.min(100000))
         }
       }
+      if(!(this.player.onpchallenge && this.player.pchallenges.includes(8))){
+        if(this.player.darkgenerators[i].greaterThanOrEqualTo(1)){
+          mult = mult.mul(new Decimal(i+2+this.player.darkgenerators[i].log10()).pow(1+this.player.setchip[i+32]*0.25))
+        }
+      }
 
-      if(this.player.darkgenerators[i].greaterThanOrEqualTo(1)){
-        mult = mult.mul(new Decimal(i+2+this.player.darkgenerators[i].log10()).pow(1+this.player.setchip[i+32]*0.25))
+
+
+      mult = mult.mul(1+this.player.setchip[i+1]*0.5)
+
+      if(this.player.onpchallenge && this.player.pchallenges.includes(2)){
+        this.incrementalmults[2] = new Decimal(0)
+        this.incrementalmults[5] = new Decimal(0)
       }
 
       this.incrementalmults[i] = mult
-
-      mult = mult.mul(1+this.player.setchip[i+1]*0.2)
 
     },
 
@@ -357,6 +625,7 @@ Vue.createApp({
           mult = this.player.rankchallengebonuses.includes(10)?mult.add(this.player.acceleratorsBought[i].pow_base(2)):mult.add(this.player.acceleratorsBought[i])
         }
         mult = mult.mul(new Decimal(1.5).pow(this.player.setchip[i+10]))
+        mult = mult.mul(1+this.eachpipedsmalltrophy[1]*0.2)
         this.player.accelerators[i - 1] = this.player.accelerators[i - 1].add(this.player.accelerators[i].mul(mult).mul(mu))
 
       }
@@ -364,40 +633,94 @@ Vue.createApp({
 
     updatedarkgenerators(mu){
       let darkmult = this.player.darklevel.add(1)
-      darkmult = this.softCap(darkmult,new Decimal(1e10))
-      this.player.darkmoney = this.player.darkmoney.add(this.player.darkgenerators[0].mul(mu).mul(darkmult).mul(1+this.player.setchip[41]*0.25))
+      darkmult = this.softCap(darkmult,new Decimal(1e3))
+      if(this.player.lightmoney.greaterThanOrEqualTo(1)){
+        darkmult = darkmult.mul(this.player.lightmoney.log10()+1)
+      }
+      let dgtocalc = Array.from(this.player.darkgenerators)
+      for(let i = 0; i < 8; i++){
+        dgtocalc[i] = dgtocalc[i].mul(this.player.lightgenerators[i].add(1))
+      }
+      this.player.darkmoney = this.player.darkmoney.add(dgtocalc[0].mul(mu).mul(darkmult).mul(1+this.player.setchip[41]*0.25).mul(1+this.eachpipedsmalltrophy[5]*0.2))
       for (let i = 1; i < 8; i++) {
-        this.player.darkgenerators[i - 1] = this.player.darkgenerators[i - 1].add(this.player.darkgenerators[i].mul(mu).mul(darkmult).mul(1+this.player.setchip[41+i]*0.25))
+        this.player.darkgenerators[i - 1] = this.player.darkgenerators[i - 1].add(dgtocalc[i].mul(mu).mul(darkmult).mul(1+this.player.setchip[41+i]*0.25).mul(1+this.eachpipedsmalltrophy[5]*0.2))
+      }
+    },
+    updatelightgenerators(mu){
+
+      this.player.lightmoney = this.player.lightmoney.add(this.player.lightgenerators[0].mul(mu))
+      for (let i = 1; i < 8; i++) {
+        this.player.lightgenerators[i - 1] = this.player.lightgenerators[i - 1].add(this.player.lightgenerators[i])
       }
     },
 
     spendshine(num){
       if(this.player.shine<num)return;
+      if(this.player.onpchallenge && this.player.pchallenges.includes(6))return
       this.player.shine -= num
-      let val = new Decimal(11).pow(new Decimal(num).log10())
+      let val = new Decimal(11+this.player.setchip[31]).pow(new Decimal(num).log10())
       this.updategenerators(new Decimal(val))
       this.updateaccelerators(new Decimal(val))
     },
     spendbrightness(num){
       if(this.player.brightness<num)return;
+      if(this.player.onpchallenge && this.player.pchallenges.includes(6))return
       this.player.brightness -= num
-      let val = new Decimal(11).pow(new Decimal(num*100).log10())
+      let val = new Decimal(11+this.player.setchip[50]).pow(new Decimal(num*100).log10())
+      let vald = new Decimal(10+this.player.setchip[51]*0.25).pow(new Decimal(num).log10())
       this.updategenerators(new Decimal(val))
       this.updateaccelerators(new Decimal(val))
-      this.updatedarkgenerators(new Decimal(num))
+      this.updatedarkgenerators(new Decimal(vald))
     },
-
+    spendflicker(num){
+      if(this.player.flicker<num)return;
+      this.player.flicker -= num
+      let val = new Decimal(11+this.player.setchip[50]).pow(new Decimal(num*10000).log10())
+      let vald = new Decimal(10+this.player.setchip[51]*0.25).pow(new Decimal(num).log10())
+      this.updategenerators(new Decimal(val))
+      this.updateaccelerators(new Decimal(val))
+      this.updatedarkgenerators(new Decimal(vald))
+      this.updatelightgenerators(new Decimal(vald))
+    },
     buytype(num){
       if(this.player.shine<this.shinedata.shineshopcost[num] || this.player.boughttype[num]) return;
       this.player.shine -= this.shinedata.shineshopcost[num]
       this.player.boughttype[num] = true
     },
     calctoken(){
+
       let spent = 0;
-      for(let i of this.player.rankchallengebonuses){
+      for(let i of this.player.challengebonuses){
         spent += this.challengedata.rewardcost[i]
       }
-      this.player.ranktoken = this.player.rankchallengecleared.length - spent
+      let t = this.player.challengecleared.length
+      if(this.player.onpchallenge){
+        t = Math.max(t,this.player.pchallengecleared[this.getpchallengeid(this.player.pchallenges)])
+      }
+      this.player.token = t - spent
+
+      let rspent = 0;
+      for(let i of this.player.rankchallengebonuses){
+        rspent += this.challengedata.rewardcost[i]
+      }
+      let rt = this.player.rankchallengecleared.length
+      if(this.player.onpchallenge){
+        rt = Math.max(rt,this.player.prchallengecleared[this.getpchallengeid(this.player.pchallenges)])
+      }
+      this.player.ranktoken = rt - rspent
+
+    },
+    countpchallengecleared(){
+
+      let cnt = 0;
+      for(let i=0;i<1024;i++){
+        cnt += this.player.pchallengecleared[i]
+        cnt += this.player.prchallengecleared[i]
+      }
+
+      cnt /= 510;
+      this.pchallengestage = Math.floor(cnt);
+
     },
     findhighestgenerator(){
       this.highest = 0;
@@ -425,10 +748,17 @@ Vue.createApp({
         this.calcbasicincrementmult(i)
       }
 
+      this.calcgncost()
+      this.calcaccost()
+      this.calcdgcost()
+      this.calclgcost()
+
       this.updategenerators(new Decimal(1))
       this.updateaccelerators(new Decimal(1))
 
       this.calctoken()
+
+      let rememberlevel = Math.floor((this.checkremembers()+16)/16)
 
       let amult = new Decimal(1)
       if(this.activechallengebonuses.includes(6)){
@@ -441,19 +771,53 @@ Vue.createApp({
 
       this.shinepersent = this.shinedata.getp(this.player.challengecleared.length)
       this.shinepersent += 0.02 * this.player.setchip[30]
+      this.shinepersent += 0.01 * this.eachpipedsmalltrophy[6] * 0.5
 
-      if(this.player.shine<this.shinedata.getmaxshine(this.player.challengecleared.length) && Math.random()<this.shinepersent){
-        this.player.shine += this.player.rankchallengebonuses.includes(2)?2:1
+      if(this.player.shine<this.shinedata.getmaxshine(this.player.challengecleared.length) * rememberlevel && Math.random()<this.shinepersent){
+        let shineget = 1
+        if(this.player.rankchallengebonuses.includes(2)) shineget = 2
+        let d = new Date()
+        if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
+          if(Math.random()<=0.5){
+            shineget = shineget + 1//クリスマスキャンペーン
+          }
+        }
+        this.player.shine += shineget
       }
 
       this.brightpersent = this.shinedata.getbp(this.player.rankchallengecleared.length)
       this.brightpersent += 0.001 * this.player.setchip[49]
+      this.brightpersent += 0.001 * this.eachpipedsmalltrophy[9] * 0.2
 
-      if(this.player.brightness<this.shinedata.getmaxbr(this.player.rankchallengecleared.length) && Math.random()<this.brightpersent){
-        this.player.brightness += 1
+      if(this.player.brightness<this.shinedata.getmaxbr(this.player.rankchallengecleared.length) * rememberlevel && Math.random()<this.brightpersent){
+        let brightget = 1
+        let d = new Date()
+        if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
+          if(Math.random()<=0.5){
+            brightget = brightget + 1//クリスマスキャンペーン
+          }
+        }
+        this.player.brightness += brightget
       }
 
-      let autorankshine = 1000 - this.checkremembers()*10
+      this.flickerpersent = this.shinedata.getfp(this.pchallengestage)
+
+      if(this.player.flicker<this.shinedata.getmaxfl(this.pchallengestage) && Math.random()<this.flickerpersent){
+        let flickerget = 1
+        let d = new Date()
+        if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
+          if(Math.random()<=0.5){
+            flickerget = flickerget + 1//クリスマスキャンペーン
+          }
+        }
+        this.player.flicker += flickerget
+      }
+
+
+
+
+
+      let autorankshine = Math.max(0,1000 - this.checkremembers()*10)
 
       if(!this.player.onchallenge && this.player.rankchallengebonuses.includes(14) && this.autorank){
         if(this.player.shine>=autorankshine && this.player.money.greaterThanOrEqualTo(this.resetRankborder())){
@@ -504,7 +868,10 @@ Vue.createApp({
 
 
       //this.player.tickspeed = 10
-      this.player.tickspeed = (1000-this.player.setchip[9]*50-this.player.levelitems[1]*this.player.challengebonuses.length * (1+this.player.setchip[27]*0.5)) / acnum.add(10).mul(amult).log10()
+      let tsp = 1000
+      if(this.player.onpchallenge&&this.player.pchallenges.includes(1)) tsp =10000
+      tsp += 500 * this.player.accelevelused
+      this.player.tickspeed = (tsp-this.player.setchip[9]*50-this.player.levelitems[1]*this.player.challengebonuses.length * (1+this.player.setchip[27]*0.5)) / acnum.add(10).mul(amult).log10()
 
       if(this.player.rankchallengebonuses.includes(9)){
         this.multbyac = new Decimal(50).div(this.player.tickspeed)
@@ -512,205 +879,14 @@ Vue.createApp({
       }else{
         this.multbyac = new Decimal(1)
       }
+      if(this.player.accelevelused == this.player.accelevel && this.player.tickspeed<=10) this.player.accelevel = this.player.accelevel + 1
+
+
 
 
       setTimeout(this.update, Math.max(this.player.tickspeed-(this.diff+diffm)/2,1));
     },
-    exportsave(){
-      this.exported = btoa(JSON.stringify(this.players))
-    },
-    importsave(){
-      let input = window.prompt("データを入力","")
-      let k = atob(input).charAt(0)
-      console.log(k)
-      if(k=='{') return
-      localStorage.setItem("playerStoredb",input)
-      this.dataload()
-      this.load(0)
-    },
-    save() {
 
-      console.log(JSON.stringify(this.players))
-
-      this.players[this.world] = this.player
-
-      localStorage.setItem("playerStored", JSON.stringify(this.player));
-      localStorage.setItem("playerStoredb", btoa(JSON.stringify(this.players)));
-    },
-    dataload(){
-      if(!localStorage.getItem("playerStored")) return
-      let saveData = JSON.parse(localStorage.getItem("playerStored"));
-      if(saveData.saveversion === 1){
-        saveData = readOldFormat(saveData)
-      }
-      if (localStorage.getItem("playerStoredb")) {
-        this.players = JSON.parse(atob(localStorage.getItem("playerStoredb")))
-      }else{
-        this.players[0] = saveData;
-      }
-      for(let i=0;i<10;i++){
-        saveData = this.players[i]
-        while(saveData.accelerators.length<8)saveData.accelerators.push('0')
-        while(saveData.acceleratorsBought.length<8)saveData.acceleratorsBought.push('0')
-        saveData.acceleratorsBought = saveData.acceleratorsBought.map(v => new Decimal(v))
-        while(saveData.acceleratorsCost.length<8)saveData.acceleratorsCost.push('0')
-        if(saveData.levelitems.length<5){
-          while(saveData.levelitems.length<5){
-            saveData.levelitems.push(0)
-          }
-          saveData.levelitems[3] = saveData.levelitems[1]
-          saveData.levelitems[2] = saveData.levelitems[0]
-          saveData.levelitems[1] = 0
-          saveData.levelitems[0] = 0
-        }
-        if(saveData.trophies.length<8){
-          while(saveData.trophies.length<8){
-            saveData.trophies.push(false)
-          }
-        }
-        if(!('levelitembought' in saveData)){
-          saveData.levelitembought = 0
-        }
-        if(!('ranktoken' in saveData)){
-          saveData.ranktoken = saveData.rankchallengecleared.length
-        }
-        if(!('rankchallengebonuses' in saveData)){
-          saveData.rankchallengebonuses = []
-        }
-        if(!('boughttype' in saveData)){
-          saveData.boughttype = [false,false,false]
-        }
-        if(!('setmodes' in saveData)){
-          saveData.setmodes = new Array(8).fill(null).map((_, i) => i)
-        }
-        if(!('setchallengebonusesfst' in saveData)){
-          saveData.setchallengebonusesfst = []
-        }
-        if(!('setchallengebonusessnd' in saveData)){
-          saveData.setchallengebonusessnd = []
-        }
-        if(!('brightness' in saveData)){
-          saveData.brightness = 0
-        }
-        if(!('darkmoney' in saveData)){
-          saveData.darkmoney = new Decimal(0)
-        }
-        if(!('darkgenerators' in saveData)){
-          saveData.darkgenerators = new Array(8).fill(null).map(() => new Decimal(0))
-        }
-        if(!('darkgeneratorsBought' in saveData)){
-          saveData.darkgeneratorsBought = new Array(8).fill(null).map(() => new Decimal(0))
-        }
-        if(!('darkgeneratorsCost' in saveData)){
-          saveData.darkgeneratorsCost = [
-            new Decimal('1e100'),
-            new Decimal('1e108'),
-            new Decimal('1e127'),
-            new Decimal('1e164'),
-            new Decimal('1e225'),
-            new Decimal('1e316'),
-            new Decimal('1e423'),
-            new Decimal('1e612'),
-          ]
-        }
-
-
-        if(!('remember' in saveData)){
-          saveData.remember = 0
-        }
-        if(!('rememberspent' in saveData)){
-          saveData.rememberspent = 0
-        }
-        if(!('smalltrophies' in saveData)){
-          saveData.smalltrophies = new Array(100).fill(null).map(() => false)
-        }
-        if(!('chip' in saveData)){
-          saveData.chip = [0,0,0,0]
-        }
-        if(!('setchip' in saveData)){
-          saveData.setchip = new Array(setchipnum).fill(null).map(() => 0)
-        }
-        if(!('darklevel' in saveData)){
-          saveData.darklevel = new Decimal(0)
-        }
-
-
-        this.players[i] = saveData
-      }
-
-    },
-    load(world) {
-
-      saveData = this.players[world]
-      this.world = world
-      console.log(saveData)
-      this.player = {
-          money: new Decimal(saveData.money),
-          level: new Decimal(saveData.level),
-          levelresettime: new Decimal(saveData.levelresettime),
-          maxlevelgained: new Decimal(saveData.maxlevelgained ?? 1),
-          token: saveData.token ?? 0,
-          shine: saveData.shine ?? 0,
-          brightness: saveData.brightness ?? 0,
-
-          rank: new Decimal(saveData.rank ?? 0),
-          rankresettime: new Decimal(saveData.rankresettime ?? 0),
-          ranktoken: new Decimal(saveData.ranktoken ?? 0),
-
-          generators: saveData.generators.map(v => new Decimal(v)),
-          generatorsBought: saveData.generatorsBought.map(v => new Decimal(v)),
-          generatorsCost: saveData.generatorsCost.map(v => new Decimal(v)),
-          generatorsMode: saveData.generatorsMode.map(v => parseInt(v)),
-
-          accelerators: saveData.accelerators.map(v => new Decimal(v)),
-          acceleratorsBought: saveData.acceleratorsBought.map(v => new Decimal(v)),
-          acceleratorsCost: saveData.acceleratorsCost.map(v => new Decimal(v)),
-
-          darkmoney: new Decimal(saveData.darkmoney),
-
-          darkgenerators: saveData.darkgenerators.map(v => new Decimal(v)),
-          darkgeneratorsBought: saveData.darkgeneratorsBought.map(v => new Decimal(v)),
-          darkgeneratorsCost: saveData.darkgeneratorsCost.map(v => new Decimal(v)),
-
-          darklevel: new Decimal(saveData.darklevel),
-
-          tickspeed: parseFloat(saveData.tickspeed),
-          saveversion: parseInt(saveData.saveversion),
-
-          currenttab: 'basic',
-
-          tweeting: saveData.tweeting ?? ['money'],
-
-          onchallenge: saveData.onchallenge ?? false,
-          challenges: saveData.challenges ?? [],
-          challengecleared: saveData.challengecleared ?? [],
-          challengebonuses: saveData.challengebonuses ?? [],
-
-          rankchallengecleared: saveData.rankchallengecleared ?? [],
-          rankchallengebonuses: saveData.rankchallengebonuses ?? [],
-
-          boughttype: saveData.boughttype ?? [false,false,false],
-          setmodes: saveData.setmodes ?? new Array(8).fill(null).map((_, i) => i),
-          setchallengebonusesfst:saveData.setchallengebonusesfst ?? [],
-          setchallengebonusessnd:saveData.setchallengebonusessnd ?? [],
-
-          trophies: saveData.trophies ?? new Array(8).fill(null).map(() => false),
-          smalltrophies: saveData.smalltrophies ?? new Array(100).fill(null).map(() => false),
-
-          levelitems: saveData.levelitems ?? [0,0,0,0,0],
-          levelitembought :saveData.levelitembought ?? 0,
-
-          remember: saveData.remember ?? 0,
-          rememberspent: saveData.rememberspent ?? 0,
-
-          chip:saveData.chip ?? [0,0,0,0],
-          setchip:saveData.setchip ?? new Array(setchipnum).fill(null).map(() => 0)
-        };
-        if(!this.player.onchallenge || this.player.challengebonuses.includes(4))this.activechallengebonuses = this.player.challengebonuses
-      this.calcaccost()
-      this.calcdgcost()
-      this.checkusedchips()
-    },
     changeTab(tabname){
       this.player.currenttab = tabname;
     },
@@ -729,6 +905,14 @@ Vue.createApp({
         this.player.challenges.splice(this.player.challenges.indexOf(index),1)
       }
     },
+    configpchallenge(index){
+      if(this.player.onpchallenge) return;
+      if(!this.player.pchallenges.includes(index)){
+        this.player.pchallenges.push(index)
+      }else{
+        this.player.pchallenges.splice(this.player.pchallenges.indexOf(index),1)
+      }
+    },
     buyGenerator(index) {
       if(this.player.onchallenge && this.player.challenges.includes(6)){
         if(index==3||index==7){
@@ -739,12 +923,7 @@ Vue.createApp({
         this.player.money = this.player.money.sub(this.player.generatorsCost[index])
         this.player.generators[index] = this.player.generators[index].add(1)
         this.player.generatorsBought[index] = this.player.generatorsBought[index].add(1)
-        this.player.generatorsCost[index] = index === 0 ?
-          new Decimal(10).pow(this.player.generatorsBought[0]) :
-          new Decimal(10).pow(this.player.generatorsBought[index].add(index + 1).mul(index + 1))
-        if(this.player.onchallenge && this.player.challenges.includes(1)){
-          this.player.generatorsCost[index] = this.player.generatorsCost[index].pow(2)
-        }
+        this.calcgncost()
       }
     },
     buyAccelerator(index) {
@@ -764,6 +943,14 @@ Vue.createApp({
         this.player.darkgenerators[index] = this.player.darkgenerators[index].add(1)
         this.player.darkgeneratorsBought[index] = this.player.darkgeneratorsBought[index].add(1)
         this.calcdgcost()
+      }
+    },
+    buylightgenerator(index){
+      if (this.player.money.greaterThanOrEqualTo(this.player.lightgeneratorsCost[index])) {
+        this.player.money = this.player.money.sub(this.player.lightgeneratorsCost[index])
+        this.player.lightgenerators[index] = this.player.lightgenerators[index].add(1)
+        this.player.lightgeneratorsBought[index] = this.player.lightgeneratorsBought[index].add(1)
+        this.calclgcost()
       }
     },
     configautobuyer(index){
@@ -805,6 +992,23 @@ Vue.createApp({
       }
 
     },
+    setrankbonusetype(index){
+      if(confirm("現在の上位効力を登録します。よろしいですか？")){
+        let ans = []
+        for(let i=0;i<15;i++){
+          if(this.player.rankchallengebonuses.includes(i)){
+            ans.push(i)
+          }
+        }
+        if(index==1){
+          this.player.setrankchallengebonusesfst = ans
+        }
+        if(index==2){
+          this.player.setrankchallengebonusessnd = ans
+        }
+      }
+
+    },
     changebonusetype(index){
       for(let i=0;i<15;i++){
         if(this.player.challengebonuses.includes(i)){
@@ -822,6 +1026,28 @@ Vue.createApp({
         for(let i=0;i<15;i++){
           if(this.player.setchallengebonusessnd.includes(i)){
             this.buyRewards(i)
+          }
+        }
+      }
+
+    },
+    changerankbonusetype(index){
+      for(let i=0;i<15;i++){
+        if(this.player.rankchallengebonuses.includes(i)){
+          this.buyrankRewards(i)
+        }
+      }
+      if(index==1){
+        for(let i=0;i<15;i++){
+          if(this.player.setrankchallengebonusesfst.includes(i)){
+            this.buyrankRewards(i)
+          }
+        }
+      }
+      if(index==2){
+        for(let i=0;i<15;i++){
+          if(this.player.setrankchallengebonusessnd.includes(i)){
+            this.buyrankRewards(i)
           }
         }
       }
@@ -885,6 +1111,25 @@ Vue.createApp({
         }
       }
     },
+    clearsetchip(){
+      for(let i=0;i<100;i++){
+        this.chipset(i,0)
+      }
+    },
+    setchiptype(){
+      if(confirm('現在の鋳片型を登録します。よろしいですか？')){
+        for(let i=0;i<100;i++){
+          this.player.setchiptypefst[i] = this.player.setchip[i]
+        }
+      }
+    },
+    changechiptype(){
+      this.clearsetchip()
+      for(let i=0;i<100;i++){
+        this.chipset(i,this.player.setchiptypefst[i])
+      }
+
+    },
     changeMode(index) {
       if(this.player.onchallenge && this.player.challenges.includes(3)) return;
       this.player.generatorsMode[index] += 1;
@@ -901,6 +1146,10 @@ Vue.createApp({
       }
     },
     calcgainlevel(){
+
+      if(this.player.onpchallenge && this.player.pchallenges.includes(4)){
+
+      }
       let dividing = 19-this.player.rank.add(2).log2()
       if(dividing<1) dividing = 1
       let mny = this.player.money.log10()-17
@@ -925,20 +1174,27 @@ Vue.createApp({
 
       }
 
-      gainlevel = gainlevel.round()
+      if(this.player.onpchallenge && this.player.pchallenges.includes(4)){
+        gainlevel = new Decimal(gainlevel.log2()).max(1)
+      }
 
+      gainlevel = gainlevel.round().max(1)
 
+      gainlevel = gainlevel.mul(1+this.eachpipedsmalltrophy[2]*0.2)
       if(this.activechallengebonuses.includes(12)) gainlevel = gainlevel.mul(new Decimal(2))
       return gainlevel;
     },
 
     calcgainchip(){
-      let level = this.chipdata.getcl(this.player.money)
-      return this.chipdata.getchipid(level)
+      let bonus = new Decimal(10).pow(this.eachpipedsmalltrophy[7]*0.4)
+      let clevel = this.chipdata.getcl(this.player.money.mul(bonus))
+      return this.chipdata.getchipid(clevel)
     },
 
     resetDarklevel(){
-      let gaindarklevel = new Decimal(this.player.darkmoney.log10()).div(18).pow_base(2).round()
+      let dv = 18 - this.player.crown.add(2).log2()
+      dv = Math.max(dv,1)
+      let gaindarklevel = new Decimal(this.player.darkmoney.log10()).div(dv).pow_base(2).round()
       if(confirm('裏昇段リセットして、裏段位' + gaindarklevel + 'を得ますか？')){
         this.player.darkmoney = new Decimal(0)
         this.player.darkgenerators = new Array(8).fill(null).map(() => new Decimal(0)),
@@ -950,12 +1206,14 @@ Vue.createApp({
           new Decimal('1e164'),
           new Decimal('1e225'),
           new Decimal('1e316'),
-          new Decimal('1e423'),
+          new Decimal('1e443'),
           new Decimal('1e612')
         ],
         this.player.darklevel = this.player.darklevel.add(gaindarklevel)
       }
     },
+
+
 
 
 
@@ -970,9 +1228,16 @@ Vue.createApp({
       let dividing = 19-this.player.rank.add(2).log2()
       if(dividing<1) dividing = 1
       let gainlevel = this.calcgainlevel()
-      let gainlevelreset =  this.player.rankresettime.add(1).mul(1+this.player.setchip[20]).mul(new Decimal(exit?0:this.activechallengebonuses.includes(8)?2:1))
+      let rst = this.player.rankresettime.add(1)
+      if(this.player.onpchallenge && this.player.pchallenges.includes(4)){
+        rst = rst.pow(0.1).round()
+      }
+      let gainlevelreset =  rst.mul(1+this.player.setchip[20]).mul(new Decimal(exit?0:this.activechallengebonuses.includes(8)?2:1))
+
 
       if (force || confirm('昇段リセットして、段位' + gainlevel + 'を得ますか？')) {
+
+        let disa = this.player.onpchallenge && this.player.pchallenges.includes(9) && (!exit)
         if(this.player.onchallenge) {
           this.player.onchallenge = false;
           if(this.player.challenges.length >= 6){
@@ -980,19 +1245,33 @@ Vue.createApp({
           }
           let id = this.calcchallengeid()
           if(!this.player.challengecleared.includes(id)){
-            this.player.token = this.player.token + 1
             this.player.challengecleared.push(this.calcchallengeid())
+            disa = false
           }
           this.activechallengebonuses = this.player.challengebonuses;
+        }
+
+        if(disa){
+
+          let randomint = Math.floor(Math.random() * 100)
+          this.chipset(randomint,0)
+          this.player.disabledchip[randomint] = true
         }
 
         if(this.player.money.greaterThan(1e80)){
           let gainchip = this.calcgainchip()
           console.log(gainchip)
-          if(gainchip!=-1 && this.player.chip[gainchip]<100000){
+          if(gainchip!=-1 && this.player.chip[gainchip]<1000000){
             this.player.chip[gainchip] = this.player.chip[gainchip]+1
+            let d = new Date()
+            if(d.getMonth()==4&&3<=d.getDate()&&d.getDate()<=7){
+              if(gainchip==2)this.player.chip[gainchip] = this.player.chip[gainchip]+4
+            }//ゴールデンウィークキャンペーン
           }
         }
+
+
+
 
 
         this.player.money = new Decimal(1)
@@ -1039,15 +1318,28 @@ Vue.createApp({
       }
     },
     calcgainrank(){
-      let gainrank = new Decimal(this.player.money.log10()).div(36-0.25*this.checkremembers()-1.2*this.player.levelitems[4]).pow_base(2).round()
+      let dv = 36-0.25*this.checkremembers()-1.2*this.player.levelitems[4]*(1+0.2*this.player.setchip[29])
+      dv = Math.max(dv,6)
+      dv = dv-this.player.crown.add(2).log2()*0.1
+      dv = Math.max(dv,3)
+      let gainrank = new Decimal(this.player.money.log10()).div(dv).pow_base(2).round()
+      if(this.player.onpchallenge && this.player.pchallenges.includes(5)){
+        gainrank = new Decimal(gainrank.log10()).max(1)
+      }
       if(this.player.rankchallengebonuses.includes(12)){
         gainrank = gainrank.mul(3)
       }
+      gainrank = gainrank.mul(1+this.player.setchip[22]*0.5)
+      gainrank = gainrank.mul(1+this.eachpipedsmalltrophy[4]*0.2)
       return gainrank
     },
     resetRankborder(){
       let p = (this.player.onchallenge && this.player.challenges.includes(0))?96:72
-      p -= this.checkremembers()/2.0
+      let q = this.checkremembers()
+      if(this.player.onpchallenge&&this.player.pchallenges.includes(7)){
+        q = Math.pow(q,0.5)
+      }
+      p -= Math.min(q/2.0,36)
       return new Decimal(10).pow(p)
     },
     resetRank(force){
@@ -1104,7 +1396,7 @@ Vue.createApp({
         this.player.tickspeed = 1000
 
         this.player.rank = this.player.rank.add(gainrank)
-        this.player.rankresettime = this.player.rankresettime.add((this.player.rankchallengebonuses.includes(8)?new Decimal(3):new Decimal(1)).mul(this.player.setchip[24]+1))
+        this.player.rankresettime = this.player.rankresettime.add((this.player.rankchallengebonuses.includes(8)?new Decimal(3):new Decimal(1)).mul(this.player.setchip[24]+1).mul(this.player.crownresettime.add(1)))
 
         this.player.levelitems = [0,0,0,0,0]
 
@@ -1117,6 +1409,83 @@ Vue.createApp({
 
       }
     },
+    calcgaincrown(){
+      let dv = 72
+      return new Decimal(2).pow(this.player.money.log10()/dv).round()
+    },
+    resetCrownborder(){
+      return new Decimal("1e216")
+    },
+    resetCrown(force){
+      if(this.player.onchallenge){
+        alert('現在挑戦中のため、昇冠リセットができません。')
+        //あとで消す
+        return;
+      }
+      if(this.player.onchallenge && this.player.challenges.includes(0)){
+        if(this.player.money.lt(this.resetCrownborder())){
+          alert('現在挑戦1が適用されているため、まだ昇冠リセットができません。')
+          return;
+        }
+      }
+
+      let gaincrown = this.calcgaincrown()
+      if(force || confirm('昇冠リセットして、冠位' + gaincrown + 'を得ますか？')){
+
+        this.player.money = new Decimal(1)
+        this.player.level = new Decimal(0)
+        this.player.levelresettime = new Decimal(0)
+
+        this.player.rank =  new Decimal(0)
+        this.player.rankresettime = new Decimal(0)
+
+        this.player.generators = new Array(8).fill(null).map(() => new Decimal(0)),
+        this.player.generatorsBought = new Array(8).fill(null).map(() => new Decimal(0)),
+        this.player.generatorsCost = [
+          new Decimal(1),
+          new Decimal('1e4'),
+          new Decimal('1e9'),
+          new Decimal('1e16'),
+          new Decimal('1e25'),
+          new Decimal('1e36'),
+          new Decimal('1e49'),
+          new Decimal('1e64')
+        ],
+
+
+        this.player.accelerators = new Array(8).fill(null).map(() => new Decimal(0)),
+        this.player.acceleratorsBought = new Array(8).fill(null).map(() => new Decimal(0)),
+        this.player.acceleratorsCost = [
+          new Decimal(10),
+          new Decimal('1e10'),
+          new Decimal('1e20'),
+          new Decimal('1e40'),
+          new Decimal('1e80'),
+          new Decimal('1e160'),
+          new Decimal('1e320'),
+          new Decimal('1e640'),
+        ]
+
+        if(!force){
+          this.player.crown = this.player.crown.add(gaincrown)
+          this.player.crownresettime = this.player.crownresettime.add(1)
+        }
+
+        this.player.tickspeed = 1000
+
+        this.player.levelitems = [0,0,0,0,0]
+
+        this.activechallengebonuses = this.player.challengebonuses
+
+        if(this.activechallengebonuses.includes(0))this.player.money = new Decimal(10001)
+        if(this.activechallengebonuses.includes(1))this.player.accelerators[0] = new Decimal(10)
+        if(this.player.rankchallengebonuses.includes(0))this.player.money = this.player.money.add(new Decimal("1e9"))
+        if(this.player.rankchallengebonuses.includes(1))this.player.accelerators[0] = this.player.accelerators[0].add(256)
+
+      }
+    },
+
+
     calcchallengeid(){
       let challengeid = 0;
       for(let i=0;i<8;i++){
@@ -1137,18 +1506,57 @@ Vue.createApp({
       }
       return challengeid;
     },
+    getpchallengeid(arr){
+      let challengeid = 0;
+      for(let i=9;i>=0;i--){
+        challengeid *= 2
+        if(arr.includes(i)){
+          challengeid += 1
+        }
+      }
+      return challengeid;
+    },
+    configchallengeweightkind(i){
+      this.player.challengeweight[i] = this.calcchallengeid()
+    },
+    configchallengeweightvalue(i){
+      let input = window.prompt("重みを設定","")
+      input = parseInt(input)
+      if(isNaN(input)) return
+      this.player.challengeweightvalue[i] = input
+    },
     showunclearedchallenges(){
       if(this.player.challengecleared.length == 255) return;
       if(this.player.onchallenge) return;
       let challengeid = this.calcchallengeid();
 
+      let challengeweightpairs = []
+      for(let i=1;i<=255;i++){
+        let ans = 0;
+        for(let j=0;j<20;j++){
+
+          if((i|this.player.challengeweight[j]) == i){
+
+            ans += this.player.challengeweightvalue[j]
+          }
+        }
+        challengeweightpairs.push({
+          id:i,
+          weight:ans
+        })
+      }
+
+      challengeweightpairs.sort((a, b) => a.weight - b.weight)
+
+      console.log(challengeweightpairs)
+
       do{
         if(challengeid == 0) {
-          challengeid = 128
+          challengeid = challengeweightpairs[0].id
         }else {
-          let idx = this.challengedata.challengeids.indexOf(challengeid) + 1
+          let idx = challengeweightpairs.findIndex((e) => e.id == challengeid) + 1
           if(idx==255) idx = 0
-          challengeid = this.challengedata.challengeids[idx]
+          challengeid = challengeweightpairs[idx].id
         }
       }while(this.player.challengecleared.includes(challengeid));
 
@@ -1159,6 +1567,52 @@ Vue.createApp({
 
       }
       this.player.challenges = cls;
+    },
+    showunclearedrankchallenges(){
+      if(this.player.rankchallengecleared.length == 255) return;
+      if(this.player.onchallenge) return;
+      let challengeid = this.calcchallengeid();
+
+      let challengeweightpairs = []
+      for(let i=1;i<=255;i++){
+        let ans = 0;
+        for(let j=0;j<20;j++){
+
+          if((i|this.player.challengeweight[j]) == i){
+
+            ans += this.player.challengeweightvalue[j]
+          }
+        }
+        challengeweightpairs.push({
+          id:i,
+          weight:ans
+        })
+      }
+
+      challengeweightpairs.sort((a, b) => a.weight - b.weight)
+
+      console.log(challengeweightpairs)
+
+      do{
+        if(challengeid == 0) {
+          challengeid = challengeweightpairs[0].id
+        }else {
+          let idx = challengeweightpairs.findIndex((e) => e.id == challengeid) + 1
+          if(idx==255) idx = 0
+          challengeid = challengeweightpairs[idx].id
+        }
+      }while(this.player.rankchallengecleared.includes(challengeid));
+
+      this.player.challenges = calcchallengesarray(challengeid)
+    },
+    calcchallengesarray(challengeid){
+      let ans = [];
+      for(let i=7;i>=0;i--){
+        if(challengeid%2 == 1)ans.push(i)
+        challengeid = challengeid >>> 1
+      }
+      ans.sort()
+      return ans
     },
     startChallenge(){
       let challengeid = this.calcchallengeid();
@@ -1192,19 +1646,70 @@ Vue.createApp({
         }
       }
     },
+    startpChallenge(){
+
+      if(!(this.player.challengecleared.length>=255 && this.player.rankchallengecleared.length>=255)){
+        alert("まだ挑戦や階位挑戦を完了していないので、完全挑戦を開始できません。")
+        return;
+      }
+
+      if(this.player.onchallenge){
+        alert("現在挑戦中のため、完全挑戦を開始できません。")
+        return;
+      }
+
+      for(let i=0;i<10;i++){
+        if(this.player.statue[i]<this.player.pchallenges.length-i){
+          alert("像の作成数が不足しているため、完全挑戦を開始できません。")
+          return;
+        }
+      }
+
+
+      let conf = '完全挑戦を開始しますか？現在のポイントや発生器、段位や段位リセット、階位などは失われます。'
+
+      if (confirm(conf)) {
+
+        this.resetCrown(true);
+        this.player.onpchallenge = true;
+        this.player.challengecleared = []
+        this.player.challengebonuses = []
+        this.player.rankchallengecleared = []
+        this.player.rankchallengebonuses = []
+
+      }
+    },
+
+
     exitChallenge(){
       if (confirm('挑戦を諦めますか？現在のポイントや発生器、時間加速器を引き継いだまま、通常の状態に入ります。')) {
         this.player.onchallenge = false;
         this.activechallengebonuses = this.player.challengebonuses;
-        if(this.player.challenges.includes(1)){
-          for(let i=0;i<8;i++){
-            this.player.generatorsCost[i] = i === 0 ?
-            new Decimal(10).pow(this.player.generatorsBought[0]) :
-            new Decimal(10).pow(this.player.generatorsBought[i].add(i + 1).mul(i + 1))
-          }
-        }
+        this.calcgncost()
       }
     },
+
+    exitpChallenge(){
+
+      if (confirm('完全挑戦を中断しますか？現在のポイントや発生器、時間加速器を引き継いだまま、通常の状態に入ります。')) {
+        if(this.player.onchallenge)this.exitChallenge()
+        this.player.onpchallenge = false;
+        this.player.pchallengecleared[this.getpchallengeid(this.player.pchallenges)] = Math.max(this.player.pchallengecleared[this.getpchallengeid(this.player.pchallenges)],this.player.challengecleared.length)
+        this.player.prchallengecleared[this.getpchallengeid(this.player.pchallenges)] = Math.max(this.player.prchallengecleared[this.getpchallengeid(this.player.pchallenges)],this.player.rankchallengecleared.length)
+        this.player.challengecleared = this.challengedata.challengeids
+        this.player.rankchallengecleared = this.challengedata.challengeids
+        for(let i=0;i<setchipnum;i++){
+          this.player.disabledchip[i] = false
+        }
+        this.countpchallengecleared()
+
+
+
+      }
+    },
+
+
+
     gettrophyname(i){
       return this.player.trophies[i]?this.trophydata.contents[i]:"???"
     },
@@ -1371,14 +1876,57 @@ Vue.createApp({
             this.players[i].rankchallengecleared.push(this.getchallengeid(this.rememberdata.givenchalenges[3][j]))
           }
         }
+        if(r>=57) this.players[i].chip[0] = 1;
+        if(r>=58) this.players[i].chip[0] = 15;
+        if(r>=59) this.players[i].chip[0] = 55;
+        if(r>=60) this.players[i].chip[0] = 120;
+        if(r>=61) this.players[i].chip[1] = 1;
+        if(r>=62) this.players[i].chip[1] = 15;
+        if(r>=63) this.players[i].chip[1] = 55;
+        if(r>=64) this.players[i].chip[1] = 120;
+        if(r>=65) this.players[i].chip[2] = 1;
+        if(r>=66) this.players[i].chip[2] = 15;
+        if(r>=67) this.players[i].chip[2] = 55;
+        if(r>=68) this.players[i].chip[2] = 120;
+        if(r>=69) this.players[i].chip[3] = 1;
+        if(r>=70) this.players[i].chip[3] = 15;
+        if(r>=71) this.players[i].chip[3] = 55;
+        if(r>=72) this.players[i].chip[3] = 120;
 
 
         this.players[i].token = this.players[i].challengecleared.length
 
-
+        this.checkpipedsmalltrophies()
 
       }
     },
+
+    calcmaxpipe(){
+      if(this.player.trophies[9]) return 3
+      if(this.player.trophies[7]) return 2
+      return 1
+
+    },
+
+    openpipe(i){
+
+      console.log("a")
+
+      let maxpipe = this.calcmaxpipe()
+
+      if(this.player.worldpipe[i]>=maxpipe)return
+
+      let havepipe = Math.floor((this.smalltrophy-72)/3)
+      for(let j=0;j<10;j++){
+        havepipe -= this.player.worldpipe[j]
+      }
+
+
+
+      if(havepipe>0&&this.player.worldpipe[i]<maxpipe)this.player.worldpipe[i] = this.player.worldpipe[i]+1
+
+    },
+
     confchecktrophies(){
       this.trophycheck = !this.trophycheck
     },
@@ -1394,6 +1942,11 @@ Vue.createApp({
       if(this.world==0){
         if(this.checkremembers()>0)this.player.trophies[6] = true;
       }
+      if(this.player.crownresettime.greaterThan(0))this.player.trophies[7] = true;
+      if(this.player.lightgenerators[0].greaterThan(0))this.player.trophies[8] = true;
+      if(this.player.flicker>0)this.player.trophies[9] = true;
+
+
       if(this.player.money.greaterThan(0))this.player.smalltrophies[0] = true
       if(this.player.money.greaterThan(777))this.player.smalltrophies[1] = true
       if(this.player.money.greaterThan(7777777))this.player.smalltrophies[2] = true
@@ -1479,11 +2032,90 @@ Vue.createApp({
       if(this.player.darkmoney.greaterThanOrEqualTo(7777777))this.player.smalltrophies[82] = true
       if(this.player.darkmoney.greaterThanOrEqualTo("1e18"))this.player.smalltrophies[83] = true
       if(this.player.darkmoney.greaterThanOrEqualTo("1e72"))this.player.smalltrophies[84] = true
+      if(this.player.chip[0]>0)this.player.smalltrophies[85] = true
+      if(this.player.chip[0]>=210)this.player.smalltrophies[86] = true
+      if(this.player.chip[0]>=1275)this.player.smalltrophies[87] = true
+      if(this.player.chip[1]>0)this.player.smalltrophies[88] = true
+      if(this.player.chip[1]>=210)this.player.smalltrophies[89] = true
+      if(this.player.chip[1]>=1275)this.player.smalltrophies[90] = true
+      if(this.player.chip[2]>0)this.player.smalltrophies[91] = true
+      if(this.player.chip[2]>=210)this.player.smalltrophies[92] = true
+      if(this.player.chip[2]>=1275)this.player.smalltrophies[93] = true
+      if(this.player.chip[3]>0)this.player.smalltrophies[94] = true
+      if(this.player.chip[3]>=210)this.player.smalltrophies[95] = true
+      if(this.player.chip[3]>=1275)this.player.smalltrophies[96] = true
+      if(this.player.darklevel.greaterThan(0))this.player.smalltrophies[97] = true
+      if(this.player.darklevel.greaterThan('1e3'))this.player.smalltrophies[98] = true
+      if(this.player.darklevel.greaterThan('1e10'))this.player.smalltrophies[99] = true
+
+      if(this.player.crownresettime.gt(0)){
+
+        if(this.player.crownresettime.gt(0))this.player.smalltrophies2nd[0] = true
+        if(this.player.crownresettime.greaterThanOrEqualTo(5))this.player.smalltrophies2nd[1] = true
+        if(this.player.crownresettime.greaterThanOrEqualTo(20))this.player.smalltrophies2nd[2] = true
+        if(this.player.crownresettime.greaterThanOrEqualTo(100))this.player.smalltrophies2nd[3] = true
+        if(this.player.accelevel>=1)this.player.smalltrophies2nd[4] = true
+        if(this.player.accelevel>=3)this.player.smalltrophies2nd[5] = true
+        if(this.player.accelevel>=6)this.player.smalltrophies2nd[6] = true
+        if(this.player.accelevel>=10)this.player.smalltrophies2nd[7] = true
+        if(this.player.rank.gt('1e8'))this.player.smalltrophies2nd[8] = true
+        if(this.player.rank.gt('1e10'))this.player.smalltrophies2nd[9] = true
+        if(this.player.rank.gt('1e12'))this.player.smalltrophies2nd[10] = true
+        if(this.player.lightgenerators[0].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[11] = true
+        if(this.player.lightgenerators[1].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[12] = true
+        if(this.player.lightgenerators[2].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[13] = true
+        if(this.player.lightgenerators[3].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[14] = true
+        if(this.player.lightgenerators[4].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[15] = true
+        if(this.player.lightgenerators[5].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[16] = true
+        if(this.player.lightgenerators[6].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[17] = true
+        if(this.player.lightgenerators[7].greaterThanOrEqualTo(1))this.player.smalltrophies2nd[18] = true
+        if(this.player.chip[4]>0)this.player.smalltrophies2nd[19] = true
+        if(this.player.chip[4]>=210)this.player.smalltrophies2nd[20] = true
+        if(this.player.chip[4]>=1275)this.player.smalltrophies2nd[21] = true
+        if(this.player.statue[0]>=10)this.player.smalltrophies2nd[22] = true
+        if(this.player.statue[1]>=10)this.player.smalltrophies2nd[23] = true
+        if(this.player.statue[2]>=10)this.player.smalltrophies2nd[24] = true
+        if(this.player.statue[3]>=10)this.player.smalltrophies2nd[25] = true
+        if(this.player.crown.greaterThanOrEqualTo(100))this.player.smalltrophies2nd[26] = true
+        if(this.player.crown.greaterThanOrEqualTo(10000))this.player.smalltrophies2nd[27] = true
+        if(this.player.crown.greaterThanOrEqualTo("1e8"))this.player.smalltrophies2nd[28] = true
+        if(this.player.lightmoney.greaterThanOrEqualTo(1))this.player.smalltrophies2nd[29] = true
+        if(this.player.lightmoney.greaterThanOrEqualTo("1e9"))this.player.smalltrophies2nd[30] = true
+        if(this.player.lightmoney.greaterThanOrEqualTo("1e18"))this.player.smalltrophies2nd[31] = true
+        if(this.player.lightmoney.greaterThanOrEqualTo("1e36"))this.player.smalltrophies2nd[32] = true
+        if(this.player.flicker>=10)this.player.smalltrophies2nd[33] = true
+        if(this.player.flicker>=100)this.player.smalltrophies2nd[34] = true
+        if(this.player.flicker>=1000)this.player.smalltrophies2nd[35] = true
+        if(this.player.flicker>=10000)this.player.smalltrophies2nd[36] = true
+        if(this.player.flicker>=100000)this.player.smalltrophies2nd[37] = true
+        if(this.player.flicker>=1000000)this.player.smalltrophies2nd[38] = true
+        if(this.player.chip[5]>0)this.player.smalltrophies2nd[39] = true
+        if(this.player.chip[5]>=210)this.player.smalltrophies2nd[40] = true
+        if(this.player.chip[5]>=1275)this.player.smalltrophies2nd[41] = true
+        if(this.player.chip[6]>0)this.player.smalltrophies2nd[42] = true
+        if(this.player.chip[6]>=210)this.player.smalltrophies2nd[43] = true
+        if(this.player.chip[6]>=1275)this.player.smalltrophies2nd[44] = true
+        if(this.player.statue[4]>=10)this.player.smalltrophies2nd[45] = true
+        if(this.player.statue[5]>=10)this.player.smalltrophies2nd[46] = true
+        if(this.player.statue[6]>=10)this.player.smalltrophies2nd[47] = true
+        if(this.player.statue[0]>=64)this.player.smalltrophies2nd[48] = true
+        if(this.player.statue[1]>=64)this.player.smalltrophies2nd[49] = true
+        if(this.player.statue[2]>=64)this.player.smalltrophies2nd[50] = true
+        if(this.player.statue[3]>=64)this.player.smalltrophies2nd[51] = true
+        if(this.player.statue[4]>=64)this.player.smalltrophies2nd[52] = true
+        if(this.player.statue[5]>=64)this.player.smalltrophies2nd[53] = true
+        if(this.player.statue[6]>=64)this.player.smalltrophies2nd[54] = true
+
+
+
+      }
+
 
 
     },
 
     chipset(i,j){
+      if(this.player.disabledchip[i]) return
       if(this.player.setchip[i] == j) return
       if(this.player.chip[j-1]<=this.chipused[j-1]) return
       let oldchip = this.player.setchip[i]-1
@@ -1500,18 +2132,59 @@ Vue.createApp({
       }
     },
 
+    calcstatuecost(i){
+      return (this.player.statue[i]+1)*10000
+    },
+
+    buildstatue(i){
+      let cost = this.calcstatuecost(i)
+      if(this.player.chip[i] < cost) return
+      this.player.chip[i] -= cost
+      this.player.statue[i] += 1
+    },
+
+    worktime(val){
+      if(0<=val&&val<=this.player.accelevel){
+        this.player.accelevelused = val
+      }
+    },
+
     counttrophies(index){
       let cnt = 0
-      for(let i=0;i<8;i++){
+      for(let i=0;i<trophynum;i++){
         if(this.players[index].trophies[i])cnt++;
       }
       this.trophynumber[index] = cnt
 
     },
+    checkpipedsmalltrophies(){
+      let sum = 0
+      for(i=0;i<10;i++){
+        let cnt = 0
+        if(this.players[i].worldpipe[this.world]>=1){
+          for(let j=0;j<100;j++){
+            if(this.players[i].smalltrophies[j])cnt++;
+          }
+          for(let j=0;j<100;j++){
+            if(this.players[i].smalltrophies2nd[j])cnt++;
+          }
+          cnt -= 75
+          cnt *= this.players[i].worldpipe[this.world]
+          this.eachpipedsmalltrophy[i] = cnt;
+          sum += cnt
+        }else{
+          this.eachpipedsmalltrophy[i] = 0;
+        }
+      }
+      this.pipedsmalltrophy = sum
+    },
     countsmalltrophies(index){
       let cnt = 0;
       for(let i=0;i<100;i++){
         if(this.player.smalltrophies[i])cnt++;
+      }
+      for(let i=0;i<100;i++){
+        if(this.player.smalltrophies2nd[i])cnt++;
       }
       this.smalltrophy = cnt
     },
@@ -1534,7 +2207,13 @@ Vue.createApp({
     },
     checkworlds(){
 
-      this.worldopened[0] = true;
+      this.worldopened[0] = true
+      if(new Decimal(this.players[0].crownresettime).gt(0)){
+        for(let i=1;i<10;i++){
+          this.worldopened[i] = true
+        }
+      }
+
       if(this.players[0].challengecleared.includes(238))this.worldopened[1] = true
       if(this.players[0].challengecleared.length>=100)this.worldopened[2] = true
       if(this.players[0].rankchallengecleared.length>=16)this.worldopened[3] = true
@@ -1543,6 +2222,7 @@ Vue.createApp({
       if(new Decimal(this.players[0].rank).greaterThanOrEqualTo(262142))this.worldopened[6] = true
       if(this.players[0].rankchallengecleared.includes(238))this.worldopened[7] = true
       if(this.players[0].challengecleared.length>=200)this.worldopened[8] = true
+      if(this.players[0].rankchallengecleared.length>=200)this.worldopened[9] = true
 
     },
 
