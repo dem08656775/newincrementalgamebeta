@@ -77,7 +77,7 @@ function Ringdata(){
     {
       turn:10,
       goal:1500,
-      exp:3000
+      exp:30
     },
     {
       turn:15,
