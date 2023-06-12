@@ -2224,6 +2224,7 @@ Vue.createApp({
     },
 
     startmission(i){
+      if(this.player.rings.setrings.length==0)return
       if(this.player.rings.onmission)return
       this.player.rings.onmission = true
       this.player.rings.missionid = i
