@@ -91,6 +91,9 @@
 				<span id="trophy">
 					<button type="button" @click="changeTab('trophy')">実績</button>
 				</span>
+				<span id="ring">
+					<button type="button" @click="changeTab('ring')">輪</button>
+				</span>
 
 
 			</div>
@@ -524,6 +527,9 @@
 					<button type="button" class="spendshinebutton" v-if="player.challengecleared.length >= 224" @click="spendshine(100000)">
 						輝き消費:100000
 					</button>
+					<button type="button" class="spendshinebutton" v-if="pchallengestage>=10" @click="spendshine(1000000)">
+						輝き消費:1000000
+					</button>
 				</div>
 				<div>輝き入手率: {{ (shinepersent * 100).toFixed(1) }}%</div>
 				<div>最大輝き保有数: {{ shinedata.getmaxshine(player.challengecleared.length) * Math.floor((this.checkremembers()+16)/16)}}</div>
@@ -575,6 +581,9 @@
 
 					<div>瞬き入手率: {{ (flickerpersent * 100).toFixed(5) }}%</div>
 					<div>最大瞬き保有数: {{ shinedata.getmaxfl(pchallengestage) }}</div>
+				</div>
+				<div v-if="pchallengestage>=10">
+					残滓: {{ player.residue }}
 				</div>
 			</div>
 			<div v-show="player.currenttab == 'world'">
@@ -647,6 +656,20 @@
 					</div>
 				</div>
 				<br>
+
+				<div v-show="player.statue.some((x) => x>0)">
+					洗練:洗練とは、段位リセット時に鋳片を消費して、質の高い鋳片の入手率を向上させることです。
+					洗練度: {{ calcchipretrytime() }}
+					<div v-for= "i in 9" :key="i">
+						<div v-show = "player.statue[i-1]>0">
+							<button type="button"  @click="configspendchip(i-1)">
+								{{ chipdata.chipname[i-1] + "片" }}:消費数登録
+							</button>
+							現在消費数:{{ player.spendchip[i-1] }}
+						</div>
+					</div>
+				</div>
+
 				鋳片使用
 				<div v-for="i in 32" :key="i">
 					鋳片効力 {{ i }} : {{ chipdata.chipbonusname[i-1] }}
@@ -691,7 +714,7 @@
 			</div>
 			<div v-show="player.currenttab == 'statue'">
 				像は、対応する鋳片を使用して作成することができます。像を作成するたびに、必要な鋳片の量は増加します。
-				像は、完全挑戦に入るのに規定数が必要となり（消費はされません）、今後追加の変更で、別の用途で有効となる予定です。
+				像は、完全挑戦に入るのに規定数が必要となります。
 				<div v-for="i in 10" :key="i">
 					<div v-show = "player.chip[i-1]>0 || chipused[i-1]>0">
 						{{chipdata.chipname[i-1] + "像"}}: {{ player.statue[i-1] }}
@@ -699,6 +722,54 @@
 							設像 コスト:{{ calcstatuecost(i-1) }}
 						</button>
 					</div>
+				</div>
+			</div>
+			<div v-show="player.currenttab == 'ring'">
+				<div v-if="!player.rings.onmission">
+					<div v-for="i in 3" :key="i">
+						輪 {{ i }}: 経験値:{{ player.rings.ringsexp[i-1] }} 級位:{{ ringdata.getlevel(player.rings.ringsexp[i-1]) }}
+					</div>
+					<div>
+						使用輪:{{ player.rings.setrings.map((e) => e+1) }}
+						<div v-for="i in 3" :key="i">
+							<button type="button" @click="configsetrings(i-1)">
+								仕様輪設定 {{ i }}
+							</button>
+						</div>
+					</div>
+				  <div>試練</div>
+					<div v-for="i in 4" :key="i">
+						<button type="button" v-if="isavailablemission(i-1)" @click="startmission(i-1)">
+							試練{{ i }}開始
+						</button>
+					</div>
+				</div>
+				<div v-if="player.rings.onmission">
+					<div>試練</div>
+					<div>
+						<span>周期: {{ player.rings.missionstate.turn+1 }} / {{ ringdata.missioninfo[player.rings.missionid].turn }} </span>
+						<span>評価: {{ ringpointsum() }} / {{ ringdata.missioninfo[player.rings.missionid].goal }} </span>
+					</div>
+					<div>
+						評価詳細: 花:{{ player.rings.missionstate.flowerpoint }} 雪: {{ player.rings.missionstate.snowpoint }} 月: {{ player.rings.missionstate.moonpoint }}
+					</div>
+					<div>
+						倍率: 花:{{ player.rings.missionstate.flowermultiplier.toFixed(2) }} 雪: {{ player.rings.missionstate.snowmultiplier.toFixed(2) }} 月: {{ player.rings.missionstate.moonmultiplier.toFixed(2) }}
+					</div>
+					<div>
+						現在輪:{{ player.rings.setrings[player.rings.missionstate.activering]+1 }} 技量霊気: {{player.rings.missionstate.tps[player.rings.missionstate.activering] }}
+						<div>
+							花霊力:{{ ringdata.shortgetstatus(player.rings,0) }} 雪霊力:{{ ringdata.shortgetstatus(player.rings,1) }} 月霊力:{{ ringdata.shortgetstatus(player.rings,2) }}
+						</div>
+						<div v-for="i in ringdata.availableskills(player.rings,player.rings.setrings[player.rings.missionstate.activering]).length" :key="i">
+							<button v-if="player.rings.missionstate.turn < ringdata.missioninfo[this.player.rings.missionid].turn" type="button" @click="useskill(i-1)">
+								{{ ringdata.skills[ringdata.availableskills(player.rings,player.rings.setrings[player.rings.missionstate.activering])[i-1]].name }} 消費技量霊気: {{ ringdata.skills[ringdata.availableskills(player.rings,player.rings.setrings[player.rings.missionstate.activering])[i-1]].tp }}
+							</button>
+						</div>
+					</div>
+					<button v-if="player.rings.missionstate.turn >= ringdata.missioninfo[this.player.rings.missionid].turn" type="button" @click="endmission()">
+						完了
+					</button>
 				</div>
 			</div>
 			<div v-show="player.currenttab == 'trophy'">
@@ -754,6 +825,8 @@
 		<br>
 		<div>gmail:newincremental@gmail.com</div>
 	</div>
+	<script src="https://unpkg.com/is-plain-object/dist/is-plain-object.js"></script>
+	<script src="https://unpkg.com/deepmerge/dist/umd.js"></script>
 	<script src="https://unpkg.com/vue@next"></script>
 	<script type="text/javascript" src="break_infinity.js"></script>
 	<script type="text/javascript" src="challenge.js"></script>
@@ -762,6 +835,7 @@
 	<script type="text/javascript" src="trophy.js"></script>
 	<script type="text/javascript" src="remember.js"></script>
 	<script type="text/javascript" src="chip.js"></script>
+	<script type="text/javascript" src="ring.js"></script>
 	<script type="text/javascript" src="game.js"></script>
 </body>
 </html>

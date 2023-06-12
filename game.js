@@ -2,6 +2,8 @@ const version = 2;
 const trophynum = 12;
 const setchipkind = 10;
 const setchipnum = 100;
+const ringmissionnum = 15;
+
 
 const initialData = () => {
   return {
@@ -16,6 +18,8 @@ const initialData = () => {
 
     shineloader:new Array(8).fill(null).map(() => 0),
     brightloader:new Array(8).fill(null).map(() => 0),
+
+    residue:0,
 
     rank:new Decimal(0),
     rankresettime: new Decimal(0),
@@ -134,7 +138,27 @@ const initialData = () => {
 
     setchiptypefst:　new Array(100).fill(setchipnum).map(() => 0),
 
-    worldpipe:new Array(10).fill(null).map(() => 0)
+    worldpipe:new Array(10).fill(null).map(() => 0),
+    rings:{
+      setrings: [],
+      ringsexp: new Array(4).fill(null).map(() => 0),
+      onmission: false,
+      missionid:0,
+      missionstate:{
+        turn:0,
+        activering:0,
+        skilllog:[],
+        flowerpoint:0,
+        snowpoint:0,
+        moonpoint:0,
+        flowermultiplier:1,
+        snowmultiplier:1,
+        moonmultiplier:1,
+        tps:[]
+      },
+      clearedmission:[]
+    　
+    }
 
   }
 }
@@ -158,6 +182,7 @@ Vue.createApp({
       trophydata: new Trophydata(),
       rememberdata: new Rememberdata(),
       chipdata: new Chipdata(),
+      ringdata: new Ringdata(),
       exported: "",
       activechallengebonuses:[],
       genautobuy:false,
@@ -303,7 +328,12 @@ Vue.createApp({
 
       for(let i=0;i<10;i++){
 
-        saveData = Object.assign(initialData(),this.players[i])
+        const overwriteMerge = (destinationArray, sourceArray, options) => sourceArray
+
+        saveData = deepmerge(initialData(),this.players[i],{
+          arraymerge:overwriteMerge,
+          isMergeableObject: isPlainObject
+        })
 
         while(saveData.trophies.length<trophynum){
           saveData.trophies.push(false)
@@ -336,7 +366,7 @@ Vue.createApp({
       this.player = {
           money: new Decimal(saveData.money),
           level: new Decimal(saveData.level),
-          levelresettime: new Decimal(saveData.levelresettime),
+          levelresettime: new Decimal(saveData.levelresettime ?? 0),
           maxlevelgained: new Decimal(saveData.maxlevelgained ?? 1),
 
 
@@ -371,8 +401,17 @@ Vue.createApp({
 
       };
 
-      this.player = Object.assign(saveData,this.player)
+      const overwriteMerge = (destinationArray, sourceArray, options) => sourceArray
 
+      this.player = deepmerge(saveData,this.player,{
+        arraymerge:overwriteMerge,
+        isMergeableObject:isPlainObject
+      })
+      console.log(this.player.levelresettime)
+      console.log(typeof(this.player.levelresettime))
+      this.player.levelresettime.greaterThan(1)
+
+      this.player.currenttab = 'basic'
       if(!this.player.onchallenge || this.player.challengebonuses.includes(4))this.activechallengebonuses = this.player.challengebonuses
 
       this.checktrophies()
@@ -661,6 +700,9 @@ Vue.createApp({
       let val = new Decimal(11+this.player.setchip[31]).pow(new Decimal(num).log10())
       this.updategenerators(new Decimal(val))
       this.updateaccelerators(new Decimal(val))
+      if(this.player.trophies[9]){
+        this.player.residue += Math.floor(num/1000000)
+      }
     },
     spendbrightness(num){
       if(this.player.brightness<num)return;
@@ -772,6 +814,7 @@ Vue.createApp({
       this.shinepersent = this.shinedata.getp(this.player.challengecleared.length)
       this.shinepersent += 0.02 * this.player.setchip[30]
       this.shinepersent += 0.01 * this.eachpipedsmalltrophy[6] * 0.5
+      this.shinepersent += 0.001 * Math.floor(Math.pow(this.player.residue,1/3))
 
       if(this.player.shine<this.shinedata.getmaxshine(this.player.challengecleared.length) * rememberlevel && Math.random()<this.shinepersent){
         let shineget = 1
@@ -1185,10 +1228,36 @@ Vue.createApp({
       return gainlevel;
     },
 
+    calcchipretrytime(){
+
+      let retry = 0
+      for(let i=0;i<9;i++){
+        if(this.player.spendchip[i]>0){
+          retry += 1 + Math.log(this.player.spendchip[i]) / Math.log(10-i)
+        }
+      }
+      retry = Math.floor(retry)
+      return retry
+
+    },
+
+    configspendchip(i){
+      let maxspend = this.player.statue[i] * this.player.statue[i]
+      let input = window.prompt("消費数を設定:設定可能最大数:" + maxspend.toString(),"")
+      input = parseInt(input)
+      if(isNaN(input)) return
+      if(input<0 || input> maxspend) return
+      this.player.spendchip[i] = input
+    },
+
+    haveenoughchip(){
+      return this.player.chip.every((x,i) => x>=this.player.spendchip[i])
+    },
+
     calcgainchip(){
       let bonus = new Decimal(10).pow(this.eachpipedsmalltrophy[7]*0.4)
       let clevel = this.chipdata.getcl(this.player.money.mul(bonus))
-      return this.chipdata.getchipid(clevel)
+      return this.chipdata.getchipid(clevel,1 + (this.haveenoughchip()?this.calcchipretrytime():0))
     },
 
     resetDarklevel(){
@@ -1267,6 +1336,11 @@ Vue.createApp({
             if(d.getMonth()==4&&3<=d.getDate()&&d.getDate()<=7){
               if(gainchip==2)this.player.chip[gainchip] = this.player.chip[gainchip]+4
             }//ゴールデンウィークキャンペーン
+          }
+          if(this.haveenoughchip()){
+            for(let i=0;i<10;i++){
+              this.player.chip[i] -= this.player.spendchip[i]
+            }
           }
         }
 
@@ -1560,13 +1634,7 @@ Vue.createApp({
         }
       }while(this.player.challengecleared.includes(challengeid));
 
-      let cls = [];
-      for(let i=7;i>=0;i--){
-        if(challengeid%2 == 1)cls.push(i)
-        challengeid = challengeid >>> 1
-
-      }
-      this.player.challenges = cls;
+      this.player.challenges = this.calcchallengesarray(challengeid)
     },
     showunclearedrankchallenges(){
       if(this.player.rankchallengecleared.length == 255) return;
@@ -1591,8 +1659,6 @@ Vue.createApp({
 
       challengeweightpairs.sort((a, b) => a.weight - b.weight)
 
-      console.log(challengeweightpairs)
-
       do{
         if(challengeid == 0) {
           challengeid = challengeweightpairs[0].id
@@ -1603,7 +1669,7 @@ Vue.createApp({
         }
       }while(this.player.rankchallengecleared.includes(challengeid));
 
-      this.player.challenges = calcchallengesarray(challengeid)
+      this.player.challenges = this.calcchallengesarray(challengeid)
     },
     calcchallengesarray(challengeid){
       let ans = [];
@@ -2141,6 +2207,77 @@ Vue.createApp({
       if(this.player.chip[i] < cost) return
       this.player.chip[i] -= cost
       this.player.statue[i] += 1
+    },
+
+    configsetrings(i){
+      if(this.player.rings.onmission)return
+      if(this.player.rings.setrings.includes(i)){
+        this.player.rings.setrings.splice(this.player.rings.setrings.indexOf(i),1)
+      }else{
+        this.player.rings.setrings.push(i)
+      }
+    },
+
+    isavailablemission(i){
+      if(i==0) return true
+      return this.player.rings.clearedmission.includes(i-1)
+    },
+
+    startmission(i){
+      if(this.player.rings.onmission)return
+      this.player.rings.onmission = true
+      this.player.rings.missionid = i
+      this.player.rings.missionstate.turn = 0
+      this.player.rings.missionstate.activering = 0
+      this.player.rings.missionstate.flowerpoint = 0
+      this.player.rings.missionstate.snowpoint = 0
+      this.player.rings.missionstate.moonpoint = 0
+      this.player.rings.missionstate.flowermultiplier = 1
+      this.player.rings.missionstate.snowmultiplier = 1
+      this.player.rings.missionstate.moonmultiplier = 1
+      this.player.rings.missionstate.skilllog = []
+      this.player.rings.missionstate.tps = []
+      for(let r of this.player.rings.setrings){
+        let lv = this.ringdata.getlevel(this.player.rings.ringsexp[r])
+        this.player.rings.missionstate.tps.push(this.ringdata.getstatus(r,6,lv))
+      }
+
+
+    },
+
+    useskill(i){
+
+      let ringid = this.player.rings.setrings[this.player.rings.missionstate.activering]
+      let sk = this.ringdata.skills[this.ringdata.availableskills(this.player.rings,ringid)[i]]
+      if(sk.tp>this.player.rings.missionstate.tps[this.player.rings.missionstate.activering]) return
+      sk.effect(this.player.rings)
+      this.player.rings.missionstate.tps[this.player.rings.missionstate.activering] -= sk.tp
+      this.player.rings.missionstate.skilllog.push([this.player.rings.setrings[this.player.rings.missionstate.activering],i])
+
+      this.player.rings.missionstate.activering++;
+      if(this.player.rings.missionstate.activering==this.player.rings.setrings.length){
+        this.player.rings.missionstate.activering = 0;
+        this.player.rings.missionstate.turn++;
+      }
+
+    },
+
+    endmission(){
+      this.player.rings.missionstate.turn = 0
+      this.player.rings.onmission = false
+      if(this.ringpointsum() >= this.ringdata.missioninfo[this.player.rings.missionid].goal){
+        for(i in this.player.rings.setrings){
+          r = this.player.rings.setrings[i]
+          this.player.rings.ringsexp[r] += Math.floor(this.ringdata.missioninfo[this.player.rings.missionid].exp * (this.player.rings.setrings.length-i) / (this.player.rings.setrings.length * (this.player.rings.setrings.length+1) / 2))
+        }
+        if(!this.player.rings.clearedmission.includes(this.player.rings.missionid)){
+          this.player.rings.clearedmission.push(this.player.rings.missionid)
+        }
+      }
+    },
+
+    ringpointsum(){
+      return this.player.rings.missionstate.flowerpoint + this.player.rings.missionstate.snowpoint + this.player.rings.missionstate.moonpoint
     },
 
     worktime(val){
