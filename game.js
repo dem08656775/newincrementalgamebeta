@@ -141,7 +141,7 @@ const initialData = () => {
     worldpipe:new Array(10).fill(null).map(() => 0),
     rings:{
       setrings: [],
-      ringsexp: new Array(4).fill(null).map(() => 0),
+      ringsexp: new Array(13).fill(null).map(() => 0),
       onmission: false,
       missionid:0,
       missionstate:{
@@ -350,6 +350,10 @@ Vue.createApp({
 
         while(saveData.statue.length<setchipkind){
           saveData.statue.push(0)
+        }
+
+        while(saveData.rings.ringsexp.length < 13){
+          saveData.rings.ringsexp.push(0)
         }
 
 
@@ -2224,7 +2228,7 @@ Vue.createApp({
     },
 
     startmission(i){
-      if(this.player.rings.setrings.length==0)return
+      if(this.player.rings.setrings.length<this.ringdata.missioninfo[i].setsizemin || this.ringdata.missioninfo[i].setsizemax<this.player.rings.setrings.length)return
       if(this.player.rings.onmission)return
       this.player.rings.onmission = true
       this.player.rings.missionid = i
@@ -2239,7 +2243,7 @@ Vue.createApp({
       this.player.rings.missionstate.skilllog = []
       this.player.rings.missionstate.tps = []
       for(let r of this.player.rings.setrings){
-        let lv = this.ringdata.getlevel(this.player.rings.ringsexp[r])
+        let lv = this.ringdata.getlevel(this.player.rings,r)
         this.player.rings.missionstate.tps.push(this.ringdata.getstatus(r,6,lv))
       }
 
@@ -2264,9 +2268,13 @@ Vue.createApp({
     },
 
     endmission(){
+      let win = this.ringpointsum() >= this.ringdata.missioninfo[this.player.rings.missionid].goal
+      if((!win) && this.player.rings.missionstate.turn < this.ringdata.missioninfo[this.player.rings.missionid].turn){
+        if(!window.confirm("撤退します。よろしいですか？"))return
+      }
       this.player.rings.missionstate.turn = 0
       this.player.rings.onmission = false
-      if(this.ringpointsum() >= this.ringdata.missioninfo[this.player.rings.missionid].goal){
+      if(win){
         for(i in this.player.rings.setrings){
           r = this.player.rings.setrings[i]
           this.player.rings.ringsexp[r] += Math.floor(this.ringdata.missioninfo[this.player.rings.missionid].exp * (this.player.rings.setrings.length-i) / (this.player.rings.setrings.length * (this.player.rings.setrings.length+1) / 2))

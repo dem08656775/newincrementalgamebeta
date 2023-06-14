@@ -727,7 +727,7 @@
 			<div v-show="player.currenttab == 'ring'">
 				<div v-if="!player.rings.onmission">
 					<div v-for="i in 3" :key="i">
-						輪 {{ i }}: 経験値:{{ player.rings.ringsexp[i-1] }} 級位:{{ ringdata.getlevel(player.rings.ringsexp[i-1]) }}
+						輪 {{ i }}: 経験値:{{ player.rings.ringsexp[i-1] }} 級位:{{ ringdata.getlevel(player.rings,i-1) }}
 					</div>
 					<div>
 						使用輪:{{ player.rings.setrings.map((e) => e+1) }}
@@ -738,7 +738,7 @@
 						</div>
 					</div>
 				  <div>試練</div>
-					<div v-for="i in 4" :key="i">
+					<div v-for="i in ringdata.missioninfo.length" :key="i">
 						<button type="button" v-if="isavailablemission(i-1)" @click="startmission(i-1)">
 							試練{{ i }}開始
 						</button>
@@ -767,8 +767,10 @@
 							</button>
 						</div>
 					</div>
-					<button v-if="player.rings.missionstate.turn >= ringdata.missioninfo[this.player.rings.missionid].turn" type="button" @click="endmission()">
-						完了
+					<div>
+					</div>
+					<button type="button" @click="endmission()">
+						{{ ringpointsum()>=ringdata.missioninfo[player.rings.missionid].goal?"完了":"撤退"　}}
 					</button>
 				</div>
 			</div>

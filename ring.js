@@ -26,7 +26,7 @@ function Ringdata(){
   this.shortgetstatus = function(rings,statusid){
     state = rings.missionstate
     ringid = rings.setrings[state.activering]
-    level = this.getlevel(rings.ringsexp[ringid])
+    level = this.getlevel(rings,ringid)
     return this.getstatus(ringid,statusid,level)
   }
 
@@ -39,7 +39,12 @@ function Ringdata(){
   .map((v) => Math.floor(v))
   */
 
-  this.getlevel = function(exp){
+  this.levelcap = function(rings){
+    return 10
+  }
+
+  this.getlevel = function(rings,id){
+    let exp = rings.ringsexp[id]
     let lv = 0
     for(let i=0;i<this.leveltable.length;i++){
       if(exp>=this.leveltable[i]){
@@ -47,7 +52,7 @@ function Ringdata(){
       }
     }
     lv += 1
-    return Math.min(lv,10)
+    return Math.min(lv,this.levelcap(rings))
   },
 
   this.levelskills = [
@@ -72,28 +77,43 @@ function Ringdata(){
     {
       turn:5,
       goal:500,
-      exp:12
+      exp:12,
+      setsizemin:1,
+      setsizemax:3
     },
     {
       turn:10,
       goal:1500,
-      exp:30
+      exp:30,
+      setsizemin:1,
+      setsizemax:3
     },
     {
       turn:15,
       goal:3000,
-      exp:48
+      exp:48,
+      setsizemin:1,
+      setsizemax:3
     },
     {
       turn:20,
       goal:6000,
-      exp:90
+      exp:90,
+      setsizemin:1,
+      setsizemax:3
+    },
+    {
+      turn:20,
+      goal:12000,
+      exp:120,
+      setsizemin:1,
+      setsizemax:3
     }
   ]
 
   this.availableskills = function(rings,r){
     let ret = []
-    let level = this.getlevel(rings.ringsexp[r])
+    let level = this.getlevel(rings,r)
     for(let i in this.levelskills[r]){
       if(i<=level){
         ret.push(this.levelskills[r][i])
@@ -109,7 +129,7 @@ function Ringdata(){
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
-        level = this.getlevel(rings.ringsexp[ringid])
+        level = this.getlevel(rings,ringid)
         state.flowerpoint += Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level))
         state.snowpoint += Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level))
         state.moonpoint += Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level))
@@ -117,29 +137,31 @@ function Ringdata(){
     },
     {
       name:"花増幅",
-      tp:10,
+      tp:8,
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
-        level = this.getlevel(rings.ringsexp[ringid])
+        level = this.getlevel(rings,ringid)
         state.flowermultiplier +=  this.getstatus(ringid,3,level) * 0.01
       }
     },
     {
       name:"雪増幅",
-      tp:10,
+      tp:8,
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
         state.snowmultiplier += this.getstatus(ringid,4,level) * 0.01
       }
     },
     {
       name:"月増幅",
-      tp:10,
+      tp:8,
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
         state.moonmultiplier += this.getstatus(ringid,5,level) * 0.01
       }
     },
@@ -150,6 +172,7 @@ function Ringdata(){
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
         state.flowerpoint += Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level) * 5)
       }
     },
@@ -159,6 +182,7 @@ function Ringdata(){
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
         state.snowpoint += Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level) * 5)
       }
     },
@@ -168,8 +192,13 @@ function Ringdata(){
       effect:(rings) => {
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
         state.moonpoint += Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level) * 5)
       }
+    },
+    //id:7
+    {
+
     }
   ]
 
