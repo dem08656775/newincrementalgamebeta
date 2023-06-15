@@ -30,7 +30,18 @@ function Ringdata(){
     return this.getstatus(ringid,statusid,level)
   }
 
-  this.leveltable = [ 0, 14, 67, 189, 417, 796, 1385, 2256, 3495, 5194, 7449, 10367, 14064, 18673, 24338, 31213, 39456, 49232, 60719, 74105, 89597, 107407, 127757, 150872, 176987, 206352, 239230, 275897, 316633, 361726, 411470, 466173, 526159, 591762, 663324, 741194, 825727, 917289, 1016263, 1123042, 1238030, 1361637, 1494279, 1636380, 1788381, 1950737, 2123911, 2308375, 2504604, 2713085, 2934314, 3168807, 3417087, 3679688, 3957145, 4250004, 4558822, 4884172, 5226639, 5586815, 5965299, 6362697, 6779625, 7216713, 7674605, 8153958, 8655429, 9179685, 9727401, 10299267, 10895987, 11518275, 12166853, 12842447, 13545792, 14277637, 15038744, 15829888, 16651852, 17505424, 18391398, 19310581, 20263796, 21251876, 22275666, 23336015, 24433777, 25569820, 26745022, 27960279, 29216495, 30514581, 31855451, 33240033, 34669264, 36144098, 37665500, 39234441, 40851900, Infinity],
+  this.leveltable = [
+    0, 14, 67, 189, 417, 796, 1385, 2256, 3495, 5194,
+    7449, 10367, 14064, 18673, 24338, 31213, 39456, 49232, 60719, 74105,
+    89597, 107407, 127757, 150872, 176987, 206352, 239230, 275897, 316633, 361726,
+    411470, 466173, 526159, 591762, 663324, 741194, 825727, 917289, 1016263, 1123042,
+    1238030, 1361637, 1494279, 1636380, 1788381, 1950737, 2123911, 2308375, 2504604, 2713085,
+    2934314, 3168807, 3417087, 3679688, 3957145, 4250004, 4558822, 4884172, 5226639, 5586815,
+    5965299, 6362697, 6779625, 7216713, 7674605, 8153958, 8655429, 9179685, 9727401, 10299267,
+    10895987, 11518275, 12166853, 12842447, 13545792, 14277637, 15038744, 15829888, 16651852, 17505424,
+    18391398, 19310581, 20263796, 21251876, 22275666, 23336015, 24433777, 25569820, 26745022, 27960279,
+    29216495, 30514581, 31855451, 33240033, 34669264, 36144098, 37665500, 39234441, 40851900, Infinity
+  ],
   /*:generation
   new Array(99).fill(null).map((n,i) => Math.sin(i)*5 + i*10)
   .map((sum = 0, n => sum += n))
@@ -40,7 +51,8 @@ function Ringdata(){
   */
 
   this.levelcap = function(rings){
-    return 10
+    if(!rings.clearedmission.includes(3)) return 10
+    return 15
   }
 
   this.getlevel = function(rings,id){
@@ -59,18 +71,21 @@ function Ringdata(){
     {
       1:0,
       5:1,
-      10:4
+      10:4,
+      12:7,
     },
     {
       1:0,
       5:2,
-      10:5
+      8:5,
+      12:8,
     },
     {
       1:0,
       5:3,
-      10:6
-    }
+      8:6,
+      12:9,
+    },
   ]
 
   this.missioninfo = [
@@ -198,8 +213,42 @@ function Ringdata(){
     },
     //id:7
     {
+      name:"花爆発",
+      tp:20,
+      effect:(rings) => {
+        state = rings.missionstate
+        ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
+        state.flowerpoint += Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level) * 12)
+        state.flowermultiplier -= 0.20
+        if(state.flowermultiplier <=0.50)state.flowermultiplier = 0.50
+      }
+    },
+    {
+      name:"雪爆発",
+      tp:20,
+      effect:(rings) => {
+        state = rings.missionstate
+        ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
+        state.snowpoint += Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level) * 12)
+        state.snowmultiplier -= 0.20
+        if(state.snowmultiplier <=0.50)state.snowmultiplier = 0.50
+      }
+    },
+    {
+      name:"月爆発",
+      tp:20,
+      effect:(rings) => {
+        state = rings.missionstate
+        ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
+        state.moonpoint += Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level) * 12)
+        state.moonmultiplier -= 0.20
+        if(state.moonmultiplier <=0.50)state.moonmultiplier = 0.50
 
-    }
+      }
+    },
   ]
 
 }
