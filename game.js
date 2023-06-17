@@ -159,7 +159,7 @@ const initialData = () => {
       },
       clearedmission:[],
       auto:{
-        auto:false,
+        doauto:false,
         automissionid:0,
       }
     　
