@@ -124,7 +124,7 @@ function Ringdata(){
       name:"試練1",
       turn:5,
       goal:500,
-      exp:12,
+      exp:120000000000000,
       setsizemin:1,
       setsizemax:3,
       passivefunction:[],
@@ -206,6 +206,39 @@ function Ringdata(){
       setsizemax:1,
       passivefunction:[3],
       preventchallenge:[4]
+    },
+    {
+      //id:8
+      name:"花試練2",
+      turn:20,
+      goal:23000,
+      exp:200,
+      setsizemin:1,
+      setsizemax:1,
+      passivefunction:[1],
+      preventchallenge:[5]
+    },
+    {
+      //id:9
+      name:"雪試練2",
+      turn:20,
+      goal:23000,
+      exp:200,
+      setsizemin:1,
+      setsizemax:1,
+      passivefunction:[2],
+      preventchallenge:[6],
+    },
+    {
+      //id:10
+      name:"月試練2",
+      turn:20,
+      goal:23000,
+      exp:200,
+      setsizemin:1,
+      setsizemax:1,
+      passivefunction:[3],
+      preventchallenge:[7]
     }
   ]
 
@@ -351,8 +384,8 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        this.affect(state,'moonpoint',Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level)*12))
-        this.affect(state,'moonmultiplier',Math.max(-0.20,0.50-state.snowmultiplier))
+        this.affect(state,'snowpoint',Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level)*12))
+        this.affect(state,'snowmultiplier',Math.max(-0.20,0.50-state.snowmultiplier))
       }
     },
     {
