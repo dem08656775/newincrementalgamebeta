@@ -272,21 +272,21 @@ function Ringdata(){
       effect:(v) =>{
         if(v.prop=='flowerpoint')v.value = Math.floor(v.value * 1.5)
       },
-      explanation:"花の評価上昇量1.5倍"
+      description:"花の評価上昇量1.5倍"
     },
     {
       id:2,
       effect:(v) =>{
         if(v.prop=='snowpoint')v.value = Math.floor(v.value * 1.5)
       },
-      explanation:"雪の評価上昇量1.5倍"
+      description:"雪の評価上昇量1.5倍"
     },
     {
       id:3,
       effect:(v) =>{
         if(v.prop=='moonpoint')v.value = Math.floor(v.value * 1.5)
       },
-      explanation:"月の評価上昇量1.5倍"
+      description:"月の評価上昇量1.5倍"
     }
   ]
 

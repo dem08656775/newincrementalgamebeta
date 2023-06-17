@@ -157,7 +157,11 @@ const initialData = () => {
         tps:[],
         fieldeffect:[],
       },
-      clearedmission:[]
+      clearedmission:[],
+      auto:{
+        auto:false,
+        automissionid:0,
+      }
     　
     }
 
@@ -2235,6 +2239,23 @@ Vue.createApp({
       }
     },
 
+    configautomission(){
+      this.player.rings.auto.doauto = !this.player.rings.auto.doauto
+      if(this.player.rings.auto.doauto){
+        this.autoplaymission()
+      }
+    },
+
+    autoplaymission(){
+      if(this.player.rings.missionstate.turn>=this.ringdata.missioninfo[this.player.rings.missionid].turn)this.endmission()
+      if(this.player.rings.onmission){
+        this.useskill(0)
+      }else {
+        this.startmission(this.player.rings.missionid)
+      }
+      if(this.player.rings.auto.doauto)setTimeout(this.autoplaymission,1000)
+    },
+
     isavailablemission(i){
       return this.ringdata.missioninfo[i].preventchallenge.every((v) => this.player.rings.clearedmission.includes(v))
     },
@@ -2294,7 +2315,6 @@ Vue.createApp({
       if((!win) && this.player.rings.missionstate.turn < this.ringdata.missioninfo[this.player.rings.missionid].turn){
         if(!window.confirm("撤退します。よろしいですか？"))return
       }
-      this.player.rings.missionstate.turn = 0
       this.player.rings.onmission = false
       if(win){
         for(i in this.player.rings.setrings){
