@@ -124,7 +124,7 @@ function Ringdata(){
       name:"試練1",
       turn:5,
       goal:500,
-      exp:120000000000000,
+      exp:12,
       setsizemin:1,
       setsizemax:3,
       passivefunction:[],
