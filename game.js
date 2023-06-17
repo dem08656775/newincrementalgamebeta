@@ -154,7 +154,8 @@ const initialData = () => {
         flowermultiplier:1,
         snowmultiplier:1,
         moonmultiplier:1,
-        tps:[]
+        tps:[],
+        fieldeffect:[],
       },
       clearedmission:[]
     　
@@ -1799,9 +1800,11 @@ Vue.createApp({
       }
       if(confirm("世界"+(i+1)+"を収縮させ、記憶を思い出に変化させますか？収縮した世界は最初からになります。")){
         let u = this.trophynumber[i]
+        let rg = this.players[i].rings
         let r = this.checkremembers()
         this.players[i] = initialData()
         this.players[i].remember = u
+        this.players[i].rings = rg
         if(r>=1) this.players[i].levelresettime=new Decimal(1)
         if(r>=2) this.players[i].levelresettime=new Decimal(2)
         if(r>=3) this.players[i].levelresettime=new Decimal(3)
@@ -2213,8 +2216,18 @@ Vue.createApp({
       this.player.statue[i] += 1
     },
 
+    isavailablering(i){
+      if(i==0||i==1||i==2) return true
+      if(this.world>=3) return false
+      if(i==this.world+3) {
+        if(this.player.rings.clearedmission.includes(4)) return true
+      }
+      return false
+    },
+
     configsetrings(i){
       if(this.player.rings.onmission)return
+      if(!this.isavailablering(i))return
       if(this.player.rings.setrings.includes(i)){
         this.player.rings.setrings.splice(this.player.rings.setrings.indexOf(i),1)
       }else{
@@ -2223,8 +2236,7 @@ Vue.createApp({
     },
 
     isavailablemission(i){
-      if(i==0) return true
-      return this.player.rings.clearedmission.includes(i-1)
+      return this.ringdata.missioninfo[i].preventchallenge.every((v) => this.player.rings.clearedmission.includes(v))
     },
 
     startmission(i){
@@ -2246,6 +2258,11 @@ Vue.createApp({
         let lv = this.ringdata.getlevel(this.player.rings,r)
         this.player.rings.missionstate.tps.push(this.ringdata.getstatus(r,6,lv))
       }
+      this.player.rings.missionstate.fieldeffect = []
+      for(let e of this.ringdata.missioninfo[i].passivefunction){
+        this.player.rings.missionstate.fieldeffect.push([e,-1])
+      }
+
 
 
     },
@@ -2263,6 +2280,11 @@ Vue.createApp({
       if(this.player.rings.missionstate.activering==this.player.rings.setrings.length){
         this.player.rings.missionstate.activering = 0;
         this.player.rings.missionstate.turn++;
+        //this.player.rings.missionstate.fieldeffect.forEach((item, i) => {
+          //if(item[1]>=1)item[1]--;
+        //});
+        //this.player.rings.missionstate.fieldeffect = this.player.rings.missionstate.fieldeffect.filter((e) => e[1]!=0)
+
       }
 
     },
@@ -2278,6 +2300,7 @@ Vue.createApp({
         for(i in this.player.rings.setrings){
           r = this.player.rings.setrings[i]
           this.player.rings.ringsexp[r] += Math.floor(this.ringdata.missioninfo[this.player.rings.missionid].exp * (this.player.rings.setrings.length-i) / (this.player.rings.setrings.length * (this.player.rings.setrings.length+1) / 2))
+          this.player.rings.ringsexp[r] = Math.min(this.player.rings.ringsexp[r],this.ringdata.leveltable[this.ringdata.levelcap()-1])
         }
         if(!this.player.rings.clearedmission.includes(this.player.rings.missionid)){
           this.player.rings.clearedmission.push(this.player.rings.missionid)

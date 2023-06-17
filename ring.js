@@ -1,9 +1,12 @@
 function Ringdata(){
 
   this.statusdatatype = [
-    [17,10,10,5,1,1,12],
-    [9,15,9,2,6,2,12],
-    [8,8,13,3,3,7,12]
+    [17,10,10,5,1,1,12],//51
+    [9,15,9,2,6,2,12],//53
+    [8,8,13,3,3,7,12],//55
+    [12,12,7,4,4,1,15],//49
+    [10,6,10,5,2,5,15],//50
+    [5,8,8,3,6,6,15],//51
   ]
 
   this.statustable = function(fst){
@@ -51,8 +54,7 @@ function Ringdata(){
   */
 
   this.levelcap = function(rings){
-    if(!rings.clearedmission.includes(3)) return 10
-    return 15
+    return 30
   }
 
   this.getlevel = function(rings,id){
@@ -86,43 +88,105 @@ function Ringdata(){
       8:6,
       12:9,
     },
+    {
+      1:0,
+      4:1,
+      6:2,
+      8:4,
+      10:5,
+      12:7,
+      14:8
+    }
   ]
 
   this.missioninfo = [
     {
+      //id:0
+      name:"試練1",
       turn:5,
       goal:500,
-      exp:12,
+      exp:120000000000000,
       setsizemin:1,
-      setsizemax:3
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[]
     },
     {
+      //id:1
+      name:"試練2",
       turn:10,
       goal:1500,
       exp:30,
       setsizemin:1,
-      setsizemax:3
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[0]
     },
     {
+      //id:2
+      name:"試練3",
       turn:15,
       goal:3000,
       exp:48,
       setsizemin:1,
-      setsizemax:3
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[1]
     },
     {
+      //id:3
+      name:"試練4",
       turn:20,
       goal:6000,
       exp:90,
       setsizemin:1,
-      setsizemax:3
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[2]
     },
     {
+      //id:4
+      name:"試練5",
       turn:20,
       goal:12000,
       exp:120,
       setsizemin:1,
-      setsizemax:3
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[3],
+    },
+    {
+      //id:5
+      name:"花試練1",
+      turn:10,
+      goal:7000,
+      exp:80,
+      setsizemin:1,
+      setsizemax:1,
+      passivefunction:[1],
+      preventchallenge:[4]
+    },
+    {
+      //id:6
+      name:"雪試練1",
+      turn:10,
+      goal:7000,
+      exp:80,
+      setsizemin:1,
+      setsizemax:1,
+      passivefunction:[2],
+      preventchallenge:[4],
+    },
+    {
+      //id:7
+      name:"月試練1",
+      turn:10,
+      goal:7000,
+      exp:80,
+      setsizemin:1,
+      setsizemax:1,
+      passivefunction:[3],
+      preventchallenge:[4]
     }
   ]
 
@@ -137,6 +201,43 @@ function Ringdata(){
     return ret
   }
 
+  this.affect = function (st,pr,vl){
+    v = {
+      state:st,
+      prop:pr,
+      value:vl
+    }
+    for(e of state.fieldeffect){
+      eff = this.fieldeffects.find((elem) => elem.id ==e[0])
+      eff.effect(v)
+    }
+    v.state[v.prop] += v.value
+  }
+
+  this.fieldeffects =[
+    {
+      id:1,
+      effect:(v) =>{
+        if(v.prop=='flowerpoint')v.value = Math.floor(v.value * 1.5)
+      },
+      explanation:"花の評価上昇量1.5倍"
+    },
+    {
+      id:2,
+      effect:(v) =>{
+        if(v.prop=='snowpoint')v.value = Math.floor(v.value * 1.5)
+      },
+      explanation:"雪の評価上昇量1.5倍"
+    },
+    {
+      id:3,
+      effect:(v) =>{
+        if(v.prop=='moonpoint')v.value = Math.floor(v.value * 1.5)
+      },
+      explanation:"月の評価上昇量1.5倍"
+    }
+  ]
+
   this.skills =[
     {
       name:"通常",
@@ -145,9 +246,10 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.flowerpoint += Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level))
-        state.snowpoint += Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level))
-        state.moonpoint += Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level))
+        this.affect(state,'flowerpoint',Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level)))
+        this.affect(state,'snowpoint',Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level)))
+        this.affect(state,'moonpoint',Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level)))
+
       },
     },
     {
@@ -157,7 +259,7 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.flowermultiplier +=  this.getstatus(ringid,3,level) * 0.01
+        this.affect(state,'flowermultiplier',this.getstatus(ringid,3,level) * 0.01)
       }
     },
     {
@@ -167,7 +269,7 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.snowmultiplier += this.getstatus(ringid,4,level) * 0.01
+        this.affect(state,'snowmultiplier',this.getstatus(ringid,4,level) * 0.01)
       }
     },
     {
@@ -177,7 +279,7 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.moonmultiplier += this.getstatus(ringid,5,level) * 0.01
+        this.affect(state,'moonmultiplier',this.getstatus(ringid,5,level) * 0.01)
       }
     },
     //id:4
@@ -188,7 +290,7 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.flowerpoint += Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level) * 5)
+        this.affect(state,'flowerpoint',Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level)*5))
       }
     },
     {
@@ -198,7 +300,7 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.snowpoint += Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level) * 5)
+        this.affect(state,'snowpoint',Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level)*5))
       }
     },
     {
@@ -208,7 +310,7 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.moonpoint += Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level) * 5)
+        this.affect(state,'moonpoint',Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level)*5))
       }
     },
     //id:7
@@ -219,9 +321,8 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.flowerpoint += Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level) * 12)
-        state.flowermultiplier -= 0.20
-        if(state.flowermultiplier <=0.50)state.flowermultiplier = 0.50
+        this.affect(state,'flowerpoint',Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level)*12))
+        this.affect(state,'flowermultiplier',Math.max(-0.20,0.50-state.flowermultiplier))
       }
     },
     {
@@ -231,9 +332,8 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.snowpoint += Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level) * 12)
-        state.snowmultiplier -= 0.20
-        if(state.snowmultiplier <=0.50)state.snowmultiplier = 0.50
+        this.affect(state,'moonpoint',Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level)*12))
+        this.affect(state,'moonmultiplier',Math.max(-0.20,0.50-state.snowmultiplier))
       }
     },
     {
@@ -243,10 +343,8 @@ function Ringdata(){
         state = rings.missionstate
         ringid = rings.setrings[state.activering]
         level = this.getlevel(rings,ringid)
-        state.moonpoint += Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level) * 12)
-        state.moonmultiplier -= 0.20
-        if(state.moonmultiplier <=0.50)state.moonmultiplier = 0.50
-
+        this.affect(state,'moonpoint',Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level)*12))
+        this.affect(state,'moonmultiplier',Math.max(-0.20,0.50-state.moonmultiplier))
       }
     },
   ]
