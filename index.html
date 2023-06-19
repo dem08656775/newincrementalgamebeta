@@ -522,7 +522,7 @@
 					<button type="button" class="autobuyerbutton" @click="configringautobuyer(1)">
 						煌き自動消費器設定
 					</button>
-					消費煌き: {{ player.rings.outsideauto.autospendshinenumber }}　ご了承:オンにすると2秒ほどゲームが停止します
+					消費煌き: {{ player.rings.outsideauto.autospendbrightnumber }}　ご了承:オンにすると2秒ほどゲームが停止します
 				</div>
 				<div v-if="player.rings.clearedmission.includes(999)">
 					<button type="button" class="autobuyerbutton" :class="{ 'selected': autospendshine }" @click="toggleringautobuyer(0)">
