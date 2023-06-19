@@ -448,6 +448,13 @@ Vue.createApp({
       this.calcdgcost()
       this.calclgcost()
       this.checkusedchips()
+
+      if(this.player.rings.auto.doauto)this.autoplaymission()
+      if(this.player.rings.outsideauto.autospendshine)this.autoshine()
+      if(this.player.rings.outsideauto.autospendbright)this.autobright()
+
+
+
     },
 
     configshowmult(){
@@ -1038,11 +1045,11 @@ Vue.createApp({
     },
     autoshine(){
       this.spendshine(this.player.rings.outsideauto.autospendshinenumber)
-      setTimeout(this.autoshine,1000)
+      if(this.player.rings.outsideauto.autospendshine)setTimeout(this.autoshine,1000)
     },
     autobright(){
       this.spendbrightness(this.player.rings.outsideauto.autospendbrightnumber)
-      setTimeout(this.autobright,1000)
+      if(this.player.rings.outsideauto.autospendbright)setTimeout(this.autobright,1000)
     },
     toggleringautobuyer(index){
       if(index==0){
