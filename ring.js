@@ -189,7 +189,7 @@ function Ringdata(){
       //id:6
       name:"雪試練1",
       turn:10,
-      goal:7000,
+      goal:23000,
       exp:80,
       setsizemin:1,
       setsizemax:1,
@@ -239,7 +239,18 @@ function Ringdata(){
       setsizemax:1,
       passivefunction:[3],
       preventchallenge:[7]
-    }
+    },
+    {
+      //id:11
+      name:"試練6",
+      turn:20,
+      goal:65000,
+      exp:360,
+      setsizemin:1,
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[8,9,10],
+    },
   ]
 
   this.availableskills = function(rings,r){

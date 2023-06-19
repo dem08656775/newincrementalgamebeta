@@ -161,6 +161,15 @@ const initialData = () => {
       auto:{
         doauto:false,
         automissionid:0,
+      },
+      outsideauto:{
+        autospendshine:false,
+        autospendshinenumber:0,
+        autospendbright:false,
+        autospendbrightnumber:0,
+        autodarklevelreset:false,
+        autodarklevelresetborder:2,
+        autochallenge:false
       }
     　
     }
@@ -1026,6 +1035,42 @@ Vue.createApp({
       if(index==2)this.autolevel = !this.autolevel
       if(index==3)this.litemautobuy = !this.litemautobuy
       if(index==5)this.autorank = !this.autorank
+    },
+    autoshine(){
+      this.spendshine(this.player.rings.outsideauto.autospendshinenumber)
+      setTimeout(this.autoshine,1000)
+    },
+    autobright(){
+      this.spendbrightness(this.player.rings.outsideauto.autospendbrightnumber)
+      setTimeout(this.autobright,1000)
+    },
+    toggleringautobuyer(index){
+      if(index==0){
+        this.player.rings.outsideauto.autospendshine = !this.player.rings.outsideauto.autospendshine
+        if(this.player.rings.outsideauto.autospendshine){
+          this.sleep(2000)
+          this.autoshine()
+        }
+      }
+      if(index==1){
+        this.player.rings.outsideauto.autospendsbright= !this.player.rings.outsideauto.autospendbright
+        if(this.player.rings.outsideauto.autospendshine){
+          this.sleep(2000)
+          this.autobright()
+        }
+      }
+    },
+    configringautobuyer(index){
+      let input = window.prompt("消費量を設定:最大1000","")
+      input = parseInt(input)
+      if(isNaN(input)) return
+      if(input<0||input>1000) return
+      if(index==0){
+        this.player.rings.outsideauto.autospendshinenumber = input
+      }
+      if(index==1){
+        this.player.rings.outsideauto.autospendsbright= input
+      }
     },
     setbonusetype(index){
       if(confirm("現在の効力を登録します。よろしいですか？")){
@@ -2239,9 +2284,15 @@ Vue.createApp({
       }
     },
 
+    sleep(ms){
+      var startMsec = new Date();
+      while (new Date() - startMsec < ms);
+    },
+
     configautomission(){
       this.player.rings.auto.doauto = !this.player.rings.auto.doauto
       if(this.player.rings.auto.doauto){
+        this.sleep(2000)
         this.autoplaymission()
       }
     },

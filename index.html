@@ -505,6 +505,33 @@
 					現在: {{ autoranknumber.toNumber() }}
 					消費輝き: {{ 1000 - checkremembers()*10 }}
 				</div>
+				<div>輪自動化器設定</div>
+				<div v-if="player.rings.clearedmission.includes(4)">
+					<button type="button" class="autobuyerbutton" :class="{ 'selected': player.rings.outsideauto.autospendshine }" @click="toggleringautobuyer(0)">
+						輝き自動消費器　
+					</button>
+					<button type="button" class="autobuyerbutton" @click="configringautobuyer(0)">
+						輝き自動消費器設定
+					</button>
+					消費輝き: {{ player.rings.outsideauto.autospendshinenumber }}　ご了承:オンにすると2秒ほどゲームが停止します
+				</div>
+				<div v-if="player.rings.clearedmission.includes(11)">
+					<button type="button" class="autobuyerbutton" :class="{ 'selected': player.rings.outsideauto.autospendbright }" @click="toggleringautobuyer(1)">
+						煌き自動消費器
+					</button>
+					<button type="button" class="autobuyerbutton" @click="configringautobuyer(1)">
+						煌き自動消費器設定
+					</button>
+					消費煌き: {{ player.rings.outsideauto.autospendshinenumber }}　ご了承:オンにすると2秒ほどゲームが停止します
+				</div>
+				<div v-if="player.rings.clearedmission.includes(999)">
+					<button type="button" class="autobuyerbutton" :class="{ 'selected': autospendshine }" @click="toggleringautobuyer(0)">
+						輝き自動消費器
+					</button>
+					<button type="button" class="autobuyerbutton" @click="configringautobuyer(0)">
+						輝き自動消費器設定
+					</button>
+				</div>
 			</div>
 			<div v-show="player.currenttab == 'shine'">
 				<div>
@@ -727,10 +754,11 @@
 			<div v-show="player.currenttab == 'ring'">
 				使用輪:{{ player.rings.setrings.map((e) => e+1) }}
 				<div>
-					<button type="button" @click="configautomission()">
+					<button type="button" class="autobuyerbutton" :class="{ 'selected': player.rings.auto.doauto }" @click="configautomission()">
 						自動周回設定
 					</button>
-					周回試練:{{ player.rings.missionstate.missionid }}
+					周回試練:{{ ringdata.missioninfo[player.rings.missionid].name }}
+					ご了承:オンにすると2秒ほどゲームが停止します
 				</div>
 				<div v-if="!player.rings.onmission">
 					<div>
