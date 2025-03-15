@@ -91,6 +91,7 @@ const initialData = () => {
     tickspeed: 1000,
     accelevel: 0,
     accelevelused:0,
+    timecrystal:new Array(8).fill(null).map(() => 0),
     saveversion: version,
 
     currenttab: 'basic',
@@ -128,6 +129,7 @@ const initialData = () => {
 
     remember: 0,
     rememberspent: 0,
+    rememberforgot: 0,
 
     chip: new Array(setchipkind).fill(0).map(() => 0),
     setchip: new Array(setchipnum).fill(0).map(() => 0),
@@ -135,6 +137,9 @@ const initialData = () => {
     spendchip:new Array(setchipkind).fill(0).map(() => 0),
 
     statue: new Array(setchipkind).fill(0).map(() => 0),
+    polishedstatue: new Array(setchipkind).fill(0).map(() => 0),
+
+
 
     setchiptypefst:　new Array(100).fill(setchipnum).map(() => 0),
 
@@ -169,7 +174,7 @@ const initialData = () => {
         autospendbrightnumber:0,
         autodarklevelreset:false,
         autodarklevelresetborder:2,
-        autochallenge:false
+        autodochallenge:false
       }
     　
     }
@@ -207,6 +212,11 @@ Vue.createApp({
       autolevelstopnumber: new Decimal("1e100"),
       litemautobuy:false,
       autorank:false,
+
+      automissiontimerid:0,
+      autoshinetimerid:0,
+      autobrighttimerid:0,
+      autochallengetimerid:0,
 
       multbyac:new Decimal(1),
 
@@ -449,9 +459,30 @@ Vue.createApp({
       this.calclgcost()
       this.checkusedchips()
 
-      if(this.player.rings.auto.doauto)this.autoplaymission()
-      if(this.player.rings.outsideauto.autospendshine)this.autoshine()
-      if(this.player.rings.outsideauto.autospendbright)this.autobright()
+      if(this.player.rings.auto.doauto){
+        this.automissiontimerid = setInterval(this.autoplaymission,1000)
+      }else{
+        clearInterval(this.automissiontimerid)
+        this.automissiontimerid = 0
+      }
+      if(this.player.rings.outsideauto.autospendshine){
+        this.autoshinetimerid = setInterval(this.autoshine,1000)
+      }else{
+        clearInterval(this.autoshinetimerid)
+        this.autoshinetimerid = 0
+      }
+      if(this.player.rings.outsideauto.autospendbright){
+        this.autobrighttimerid = setInterval(this.autobright,1000)
+      }else{
+        clearInterval(this.autobrighttimerid)
+        this.autobrighttimerid = 0
+      }
+      if(this.player.rings.outsideauto.autodochallenge){
+        this.autochallengetimerid = setInterval(this.autochallenge,1000)
+      }else{
+        clearInterval(this.autochallengetimerid)
+        this.autochallengetimerid = 0
+      }
 
 
 
@@ -566,17 +597,33 @@ Vue.createApp({
 
       mult = mult.mul(1+this.player.setchip[0]*0.1)
 
+      for(let i=0;i<setchipkind;i++){
+        mult = mult.mul(1+this.player.statue[i]*0.01)
+      }
+
       camp = this.player.accelevelused
 
       let d = new Date()
-      if(d.getMonth()==4&&3<=d.getDate()&&d.getDate()<=7)camp = camp + 1//ゴールデンウィークキャンペーン
-      //if(d.getMonth()==0&&d.getDate()<=7)camp = camp + 1//新年キャンペーン
+      //if(d.getMonth()==4&&3<=d.getDate()&&d.getDate()<=7)camp = camp + 1//ゴールデンウィークキャンペーン
+      if(d.getMonth()==0&&d.getDate()<=7){
+        camp = camp + 1
+        if(this.player.onchallenge && this.player.challenges.includes(3) && this.player.challenges.includes(4)){
+         camp = camp + 10
+        }
+      }//新年キャンペーン
       //if(d.getMonth()==1&&8<=d.getDate()&&d.getDate()<=14)camp = camp + 1//バレンタインキャンペーン
       //if((d.getMonth()==1&&25<=d.getDate()) || ((d.getMonth()==2&&d.getDate()<=3)))camp = camp + 1//桃の節句キャンペーン
-      //if((d.getMonth()==6&&27<=d.getDate()) || ((d.getMonth()==7&&d.getDate()<27)))camp = camp + 2//1周年キャンペーン
+      if((d.getMonth()==6&&29<=d.getDate()) || ((d.getMonth()==7&&d.getDate()<=31)))camp = camp + 2//1(2)(3)周年キャンペーン
+      //if(d.getMonth()==8&&15<=d.getDate()&&d.getDate()<=21)camp = camp + 1
 
-      if(camp>7)camp=7
+      if(camp>20)camp=20
       mult = mult.mul(1 + 4 * camp)
+
+      if(this.player.rings.outsideauto.autodochallenge){
+        mult = mult.mul(0.001)
+      }
+
+
 
       this.commonmult = mult
     },
@@ -726,7 +773,7 @@ Vue.createApp({
       this.updategenerators(new Decimal(val))
       this.updateaccelerators(new Decimal(val))
       if(this.player.trophies[9]){
-        this.player.residue += Math.floor(num/1000000)
+        this.player.residue += Math.floor(num * (1 + this.pchallengestage) / 1000000)
       }
     },
     spendbrightness(num){
@@ -751,8 +798,10 @@ Vue.createApp({
     },
     buytype(num){
       if(this.player.shine<this.shinedata.shineshopcost[num] || this.player.boughttype[num]) return;
-      this.player.shine -= this.shinedata.shineshopcost[num]
-      this.player.boughttype[num] = true
+      if(confirm("本当に型を購入しますか？")){
+        this.player.shine -= this.shinedata.shineshopcost[num]
+        this.player.boughttype[num] = true
+      }
     },
     calctoken(){
 
@@ -838,48 +887,65 @@ Vue.createApp({
 
       this.shinepersent = this.shinedata.getp(this.player.challengecleared.length)
       this.shinepersent += 0.02 * this.player.setchip[30]
-      this.shinepersent += 0.01 * this.eachpipedsmalltrophy[6] * 0.5
+      this.shinepersent += 0.01 * this.eachpipedsmalltrophy[6]
       this.shinepersent += 0.001 * Math.floor(Math.pow(this.player.residue,1/3))
-
-      if(this.player.shine<this.shinedata.getmaxshine(this.player.challengecleared.length) * rememberlevel && Math.random()<this.shinepersent){
-        let shineget = 1
-        if(this.player.rankchallengebonuses.includes(2)) shineget = 2
-        let d = new Date()
-        if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
-          if(Math.random()<=0.5){
-            shineget = shineget + 1//クリスマスキャンペーン
-          }
-        }
-        this.player.shine += shineget
+      for(let i=0;i<setchipkind;i++){
+        this.shinepersent += 0.01 * this.player.polishedstatue[i]
       }
+
+      let shineget = 0
+
+      let spint = Math.floor(this.shinepersent)
+      let spdec = this.shinepersent - spint
+
+      shineget += spint
+
+      if(Math.random()<spdec){
+        shineget += 1
+      }
+
+      /*let d = new Date()
+      if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
+        if(Math.random()<=0.5){
+          shineget = shineget + 1//クリスマスキャンペーン
+        }
+      } */
+
+      if(this.player.rankchallengebonuses.includes(2)) shineget *= 2
+      shineget *= this.player.accelevelused+1
+
+      let maxshine = this.shinedata.getmaxshine(this.player.challengecleared.length,rememberlevel,this.player.polishedstatue)
+
+      this.player.shine = Math.min(this.player.shine + shineget , maxshine)
 
       this.brightpersent = this.shinedata.getbp(this.player.rankchallengecleared.length)
       this.brightpersent += 0.001 * this.player.setchip[49]
-      this.brightpersent += 0.001 * this.eachpipedsmalltrophy[9] * 0.2
+      this.brightpersent += 0.001 * this.eachpipedsmalltrophy[9] * 0.5
 
-      if(this.player.brightness<this.shinedata.getmaxbr(this.player.rankchallengecleared.length) * rememberlevel && Math.random()<this.brightpersent){
-        let brightget = 1
-        let d = new Date()
-        if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
-          if(Math.random()<=0.5){
-            brightget = brightget + 1//クリスマスキャンペーン
-          }
-        }
-        this.player.brightness += brightget
+      let brightget = 0;
+
+      if(Math.random()<this.brightpersent){
+        brightget += 1
       }
+
+      brightget *= this.player.accelevelused+1
+
+      let maxbright = this.shinedata.getmaxbr(this.player.rankchallengecleared.length) * rememberlevel
+      this.player.brightness = Math.min(this.player.brightness + brightget , maxbright);
 
       this.flickerpersent = this.shinedata.getfp(this.pchallengestage)
 
-      if(this.player.flicker<this.shinedata.getmaxfl(this.pchallengestage) && Math.random()<this.flickerpersent){
-        let flickerget = 1
-        let d = new Date()
-        if(d.getMonth()==11&&22<=d.getDate()&&d.getDate()<=28){
-          if(Math.random()<=0.5){
-            flickerget = flickerget + 1//クリスマスキャンペーン
-          }
-        }
-        this.player.flicker += flickerget
+      let flickerget = 0;
+
+      if(Math.random()<this.flickerpersent){
+        flickerget += 1
       }
+
+      flickerget *= this.player.accelevelused+1
+
+      let maxflicker = this.shinedata.getmaxfl(this.pchallengestage)
+      this.player.flicker = Math.min(this.player.flicker + flickerget , maxflicker);
+
 
 
 
@@ -905,13 +971,14 @@ Vue.createApp({
       }
 
 
-      if(!this.player.onchallenge && this.activechallengebonuses.includes(14) && this.autolevel){
-        if(this.player.money.greaterThanOrEqualTo('1e18') && this.player.level.lt(this.autolevelstopnumber)){
+      if((this.player.rings.outsideauto.autodochallenge || !this.player.onchallenge ) && this.activechallengebonuses.includes(14) && this.autolevel){
+        if(this.player.money.greaterThanOrEqualTo(this.resetLevelborder()) && this.player.level.lt(this.autolevelstopnumber)){
           if(this.calcgainlevel().greaterThanOrEqualTo(this.autolevelnumber)){
               this.resetLevel(true,false)
           }
         }
       }
+
 
       if(this.activechallengebonuses.includes(5)&&this.genautobuy){
         for(let i=7;i>=0;i--){
@@ -939,7 +1006,13 @@ Vue.createApp({
       let tsp = 1000
       if(this.player.onpchallenge&&this.player.pchallenges.includes(1)) tsp =10000
       tsp += 500 * this.player.accelevelused
-      this.player.tickspeed = (tsp-this.player.setchip[9]*50-this.player.levelitems[1]*this.player.challengebonuses.length * (1+this.player.setchip[27]*0.5)) / acnum.add(10).mul(amult).log10()
+      tsp -= this.player.setchip[9]*50
+      tsp -= this.player.levelitems[1]*this.player.challengebonuses.length * (1+this.player.setchip[27]*0.5)
+      for(let i=0;i<8;i++){
+        tsp -= this.player.timecrystal[i]
+      }
+      if(tsp<1) tsp = 1
+      this.player.tickspeed = tsp / acnum.add(10).mul(amult).log10()
 
       if(this.player.rankchallengebonuses.includes(9)){
         this.multbyac = new Decimal(50).div(this.player.tickspeed)
@@ -1045,25 +1118,45 @@ Vue.createApp({
     },
     autoshine(){
       this.spendshine(this.player.rings.outsideauto.autospendshinenumber)
-      if(this.player.rings.outsideauto.autospendshine)setTimeout(this.autoshine,1000)
     },
     autobright(){
       this.spendbrightness(this.player.rings.outsideauto.autospendbrightnumber)
-      if(this.player.rings.outsideauto.autospendbright)setTimeout(this.autobright,1000)
+    },
+    autochallenge(){
+      if(this.player.challengecleared.length==255)return;
+      if(this.player.challengecleared.includes(this.getchallengeid(this.player.challenges)) || this.player.challenges.length==0){
+        this.showunclearedchallenges()
+      }
+      if(!this.player.onchallenge){
+        this.startChallenge()
+      }
     },
     toggleringautobuyer(index){
       if(index==0){
         this.player.rings.outsideauto.autospendshine = !this.player.rings.outsideauto.autospendshine
         if(this.player.rings.outsideauto.autospendshine){
-          this.sleep(2000)
-          this.autoshine()
+          this.autoshinetimerid = setInterval(this.autoshine,1000)
+        }else{
+          clearInterval(this.autoshinetimerid)
+          this.autoshinetimerid = 0
         }
       }
       if(index==1){
-        this.player.rings.outsideauto.autospendsbright= !this.player.rings.outsideauto.autospendbright
-        if(this.player.rings.outsideauto.autospendshine){
-          this.sleep(2000)
-          this.autobright()
+        this.player.rings.outsideauto.autospendbright= !this.player.rings.outsideauto.autospendbright
+        if(this.player.rings.outsideauto.autospendbright){
+          this.autobrighttimerid = setInterval(this.autobright,1000)
+        }else{
+          clearInterval(this.autobrighttimerid)
+          this.autobrighttimerid = 0
+        }
+      }
+      if(index==2){
+        this.player.rings.outsideauto.autodochallenge= !this.player.rings.outsideauto.autodochallenge
+        if(this.player.rings.outsideauto.autodochallenge){
+          this.autochallengetimerid = setInterval(this.autochallenge,1000)
+        }else{
+          clearInterval(this.autochallengetimerid)
+          this.autochallengetimerid = 0
         }
       }
     },
@@ -1076,7 +1169,7 @@ Vue.createApp({
         this.player.rings.outsideauto.autospendshinenumber = input
       }
       if(index==1){
-        this.player.rings.outsideauto.autospendsbright= input
+        this.player.rings.outsideauto.autospendbrightnumber= input
       }
     },
     setbonusetype(index){
@@ -1284,7 +1377,7 @@ Vue.createApp({
 
       gainlevel = gainlevel.round().max(1)
 
-      gainlevel = gainlevel.mul(1+this.eachpipedsmalltrophy[2]*0.2)
+      gainlevel = gainlevel.mul(new Decimal(this.eachpipedsmalltrophy[2]/5.0).pow_base(2))
       if(this.activechallengebonuses.includes(12)) gainlevel = gainlevel.mul(new Decimal(2))
       return gainlevel;
     },
@@ -1391,12 +1484,20 @@ Vue.createApp({
         if(this.player.money.greaterThan(1e80)){
           let gainchip = this.calcgainchip()
           console.log(gainchip)
-          if(gainchip!=-1 && this.player.chip[gainchip]<1000000){
-            this.player.chip[gainchip] = this.player.chip[gainchip]+1
-            let d = new Date()
+          if(gainchip!=-1 && this.player.chip[gainchip]<10000000){
+            let hit = 0
+            for(let i=0;i<this.chipused[gainchip];i++){
+              let chipdoubleprob = 0.01
+              if(Math.random()<chipdoubleprob)hit++;
+            }
+            hit = Math.min(hit,10)
+            let chipgetnum = Math.floor(Math.pow(2,hit))
+            chipgetnum = Math.min(chipgetnum,10000000-this.player.chip[gainchip])
+            this.player.chip[gainchip] = this.player.chip[gainchip]+chipgetnum
+            /*let d = new Date()
             if(d.getMonth()==4&&3<=d.getDate()&&d.getDate()<=7){
               if(gainchip==2)this.player.chip[gainchip] = this.player.chip[gainchip]+4
-            }//ゴールデンウィークキャンペーン
+            }ゴールデンウィークキャンペーン*/
           }
           if(this.haveenoughchip()){
             for(let i=0;i<10;i++){
@@ -1413,6 +1514,16 @@ Vue.createApp({
         this.player.level = this.player.level.add(exit?new Decimal(0):gainlevel)
         this.player.levelresettime = this.player.levelresettime.add(gainlevelreset)
         this.player.maxlevelgained = this.player.maxlevelgained.max(exit?new Decimal(0):gainlevel)
+        if(this.player.accelevel>0){
+          for(let i=0;i<8;i++){
+          let crystalnum = Math.floor(this.player.accelerators[i].log10()) - 10
+          if(crystalnum<0) crystalnum = 0
+          if(crystalnum>100) crystalnum = 100
+          this.player.timecrystal[i] = Math.max(this.player.timecrystal[i],crystalnum)
+          }
+
+        }
+
 
         this.player.generators = new Array(8).fill(null).map(() => new Decimal(0)),
         this.player.generatorsBought = new Array(8).fill(null).map(() => new Decimal(0)),
@@ -1467,6 +1578,10 @@ Vue.createApp({
       gainrank = gainrank.mul(1+this.player.setchip[22]*0.5)
       gainrank = gainrank.mul(1+this.eachpipedsmalltrophy[4]*0.2)
       return gainrank
+    },
+    resetLevelborder(){
+      let p = (this.player.onchallenge && this.player.challenges.includes(0))?24:18
+      return new Decimal(10).pow(p)
     },
     resetRankborder(){
       let p = (this.player.onchallenge && this.player.challenges.includes(0))?96:72
@@ -1762,7 +1877,7 @@ Vue.createApp({
         }
       }
 
-      if (confirm(conf)) {
+      if (this.player.rings.outsideauto.autodochallenge || confirm(conf)) {
         if(!this.player.challengebonuses.includes(4))this.activechallengebonuses = [];
         this.resetLevel(true,true);
         this.player.onchallenge = true;
@@ -1858,9 +1973,13 @@ Vue.createApp({
         let u = this.trophynumber[i]
         let rg = this.players[i].rings
         let r = this.checkremembers()
+        let rd = this.players[i].residue
+        let dl = this.players[i].darklevel
+        let st = this.players[i].statue
         this.players[i] = initialData()
         this.players[i].remember = u
         this.players[i].rings = rg
+        this.players[i].residue = rd
         if(r>=1) this.players[i].levelresettime=new Decimal(1)
         if(r>=2) this.players[i].levelresettime=new Decimal(2)
         if(r>=3) this.players[i].levelresettime=new Decimal(3)
@@ -2021,6 +2140,20 @@ Vue.createApp({
         if(r>=70) this.players[i].chip[3] = 15;
         if(r>=71) this.players[i].chip[3] = 55;
         if(r>=72) this.players[i].chip[3] = 120;
+
+        if(r>=73) this.players[i].darklevel = new Decimal(100);
+        if(r>=74) this.players[i].brightness = 30000;
+        if(r>=75) this.players[i].darklevel = new Decimal(500);
+        if(r>=76) this.players[i].shine = 10000000;
+        if(r>=77) this.players[i].darklevel = new Decimal(2000);
+        if(r>=78) this.players[i].chip[0] += st[0] * 1000
+        if(r>=79) this.players[i].chip[1] += st[1] * 1000
+        if(r>=80) this.players[i].chip[2] += st[2] * 1000
+        if(r>=81) this.players[i].chip[3] += st[3] * 1000
+
+
+
+
 
 
         this.players[i].token = this.players[i].challengecleared.length
@@ -2234,6 +2367,8 @@ Vue.createApp({
         if(this.player.statue[4]>=64)this.player.smalltrophies2nd[52] = true
         if(this.player.statue[5]>=64)this.player.smalltrophies2nd[53] = true
         if(this.player.statue[6]>=64)this.player.smalltrophies2nd[54] = true
+        
+
 
 
 
@@ -2272,6 +2407,17 @@ Vue.createApp({
       this.player.statue[i] += 1
     },
 
+    calcpolishcost(i){
+      return (this.player.polishedstatue[i]+1) * 1000000
+    },
+
+    polishstatue(i){
+      let cost = this.calcpolishcost(i)
+      if(this.player.polishedstatue[i] >= this.player.statue[i] || this.player.shine < cost)return;
+      this.player.shine -= cost
+      this.player.polishedstatue[i] += 1
+    },
+
     isavailablering(i){
       if(i==0||i==1||i==2) return true
       if(this.world>=3) return false
@@ -2299,8 +2445,10 @@ Vue.createApp({
     configautomission(){
       this.player.rings.auto.doauto = !this.player.rings.auto.doauto
       if(this.player.rings.auto.doauto){
-        this.sleep(2000)
-        this.autoplaymission()
+        this.automissiontimerid = setInterval(this.autoplaymission,1000)
+      }else{
+        clearInterval(this.automissiontimerid)
+        this.automissiontimerid = 0
       }
     },
 
@@ -2311,7 +2459,6 @@ Vue.createApp({
       }else {
         this.startmission(this.player.rings.missionid)
       }
-      if(this.player.rings.auto.doauto)setTimeout(this.autoplaymission,1000)
     },
 
     isavailablemission(i){
@@ -2335,9 +2482,10 @@ Vue.createApp({
       this.player.rings.missionstate.tps = []
       for(let r of this.player.rings.setrings){
         let lv = this.ringdata.getlevel(this.player.rings,r)
-        this.player.rings.missionstate.tps.push(this.ringdata.getstatus(r,6,lv))
+        this.player.rings.missionstate.tps.push(this.ringdata.getstatus(r,6,lv))//6:tp status id
       }
       this.player.rings.missionstate.fieldeffect = []
+      console.log("Starting mission" + i)
       for(let e of this.ringdata.missioninfo[i].passivefunction){
         this.player.rings.missionstate.fieldeffect.push([e,-1])
       }
@@ -2359,6 +2507,12 @@ Vue.createApp({
       if(this.player.rings.missionstate.activering==this.player.rings.setrings.length){
         this.player.rings.missionstate.activering = 0;
         this.player.rings.missionstate.turn++;
+        for(let e of this.player.rings.missionstate.fieldeffect){
+          let eff = this.ringdata.fieldeffects.find((elem) => elem.id == e[0])
+          if(eff.timing=="turnend"){
+            eff.effect(this.player.rings.missionstate,e[1])
+          }
+        }
         //this.player.rings.missionstate.fieldeffect.forEach((item, i) => {
           //if(item[1]>=1)item[1]--;
         //});
@@ -2417,6 +2571,9 @@ Vue.createApp({
           }
           cnt -= 75
           cnt *= this.players[i].worldpipe[this.world]
+          if(this.players[i].remember>=10){
+            cnt = Math.floor(cnt * (0.1 + this.players[i].remember / 10))
+          }
           this.eachpipedsmalltrophy[i] = cnt;
           sum += cnt
         }else{

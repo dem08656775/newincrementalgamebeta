@@ -91,7 +91,7 @@
 				<span id="trophy">
 					<button type="button" @click="changeTab('trophy')">実績</button>
 				</span>
-				<span id="ring">
+				<span id="ring" v-if="player.residue >= 100">
 					<button type="button" @click="changeTab('ring')">輪</button>
 				</span>
 
@@ -185,6 +185,15 @@
 								</span>
 							</div>
 						</div>
+						<div class="accelerator" v-show="player.levelitems[3]==5 && player.accelevel>0">
+								時間加速器{{ 8 }}: {{ toFormated(player.accelerators[7],5) }}
+								<button type="button" class="abutton" :class="{ 'unavailable': player.money.lt(player.acceleratorsCost[7]) }" @click="buyAccelerator(7)">
+        					購入 コスト: {{ player.acceleratorsCost[7].toExponential(1) }}
+      					</button>
+								<span>
+									購入数: {{ player.acceleratorsBought[7].toNumber()+' '}}
+								</span>
+							</div>
 					</div>
 				</div>
 					<div v-if="player.boughttype[0]">
@@ -265,6 +274,12 @@
 				<div v-if="player.accelevelused>=1">新年キャンペーン2022 発生器+4倍</div>
 				<div v-if="player.accelevelused>=2">バレンタインキャンペーン2022 発生器+4倍</div>
 				<div v-if="player.accelevelused>=3">ひなまつりキャンペーン 発生器+4倍</div>
+				<div class="lightgenerator" v-for="i in 8" :key="i">
+					<span>
+						時の結晶{{ i }}: {{ player.timecrystal[i-1]}}
+					</span>
+				</div>
+
 			</div>
 
 
@@ -505,7 +520,7 @@
 					現在: {{ autoranknumber.toNumber() }}
 					消費輝き: {{ 1000 - checkremembers()*10 }}
 				</div>
-				<div>輪自動化器設定</div>
+				<div v-if="player.rings.clearedmission.includes(4)">輪自動化器設定</div>
 				<div v-if="player.rings.clearedmission.includes(4)">
 					<button type="button" class="autobuyerbutton" :class="{ 'selected': player.rings.outsideauto.autospendshine }" @click="toggleringautobuyer(0)">
 						輝き自動消費器　
@@ -524,13 +539,11 @@
 					</button>
 					消費煌き: {{ player.rings.outsideauto.autospendbrightnumber }}　ご了承:オンにすると2秒ほどゲームが停止します
 				</div>
-				<div v-if="player.rings.clearedmission.includes(999)">
-					<button type="button" class="autobuyerbutton" :class="{ 'selected': autospendshine }" @click="toggleringautobuyer(0)">
-						輝き自動消費器
+				<div v-if="player.rings.clearedmission.includes(12)">
+					<button type="button" class="autobuyerbutton" :class="{ 'selected': player.rings.outsideauto.autodochallenge }" @click="toggleringautobuyer(2)">
+						自動挑戦器
 					</button>
-					<button type="button" class="autobuyerbutton" @click="configringautobuyer(0)">
-						輝き自動消費器設定
-					</button>
+					ご了承:オンにすると発生器の出力が低下します
 				</div>
 			</div>
 			<div v-show="player.currenttab == 'shine'">
@@ -559,7 +572,7 @@
 					</button>
 				</div>
 				<div>輝き入手率: {{ (shinepersent * 100).toFixed(1) }}%</div>
-				<div>最大輝き保有数: {{ shinedata.getmaxshine(player.challengecleared.length) * Math.floor((this.checkremembers()+16)/16)}}</div>
+				<div>最大輝き保有数: {{ shinedata.getmaxshine(player.challengecleared.length,Math.floor((this.checkremembers()+16)/16),player.polishedstatue) }}</div>
 				<br>
 				<div>
 					型
@@ -724,6 +737,7 @@
 					</button>
 					現在: {{ player.setchip[i+32-1]==0?"なし":chipdata.chipname[player.setchip[i+32-1]-1] +"片"}}
 				</div>
+
 				<button @click="clearsetchip()">
 					すべて外す
 				</button>
@@ -743,12 +757,18 @@
 				像は、対応する鋳片を使用して作成することができます。像を作成するたびに、必要な鋳片の量は増加します。
 				像は、完全挑戦に入るのに規定数が必要となります。
 				<div v-for="i in 10" :key="i">
-					<div v-show = "player.chip[i-1]>0 || chipused[i-1]>0">
+					<div v-show = "player.chip[i-1]>0 || chipused[i-1]>0 || player.statue[i-1]>0 ">
 						{{chipdata.chipname[i-1] + "像"}}: {{ player.statue[i-1] }}
+						{{"輝" + chipdata.chipname[i-1] + "像"}}: {{ player.polishedstatue[i-1] + "/" + player.statue[i-1]}}
 						<button type="button" @click="buildstatue(i-1)">
-							設像 コスト:{{ calcstatuecost(i-1) }}
+							設像 コスト:{{ calcstatuecost(i-1) }} 片
 						</button>
+						<button type="button" @click="polishstatue(i-1)">
+							磨像 コスト:{{ calcpolishcost(i-1) }} 輝
+						</button>
+
 					</div>
+
 				</div>
 			</div>
 			<div v-show="player.currenttab == 'ring'">
@@ -765,7 +785,7 @@
 						<div v-for="i in 13" :key="i">
 							<div v-if="isavailablering(i-1)">
 								<button type="button" @click="configsetrings(i-1)">
-									仕様輪設定 {{ i }}
+									使用輪設定 {{ i }}
 								</button>
 								輪 {{ i }}: 経験値:{{ player.rings.ringsexp[i-1] }} 級位:{{ ringdata.getlevel(player.rings,i-1) }}
 							</div>
@@ -871,14 +891,15 @@
 		<br>
 		<div>gmail:newincremental@gmail.com</div>
 	</div>
-	<script src="https://unpkg.com/is-plain-object/dist/is-plain-object.js"></script>
-	<script src="https://unpkg.com/deepmerge/dist/umd.js"></script>
-	<script src="https://unpkg.com/vue@next"></script>
+	<script src="https://cdn.jsdelivr.net/npm/is-plain-object/dist/is-plain-object.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/deepmerge/dist/umd.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@3.4.5/dist/vue.global.js"></script>
 	<script type="text/javascript" src="break_infinity.js"></script>
 	<script type="text/javascript" src="challenge.js"></script>
 	<script type="text/javascript" src="rank.js"></script>
 	<script type="text/javascript" src="shine.js"></script>
 	<script type="text/javascript" src="trophy.js"></script>
+
 	<script type="text/javascript" src="remember.js"></script>
 	<script type="text/javascript" src="chip.js"></script>
 	<script type="text/javascript" src="ring.js"></script>

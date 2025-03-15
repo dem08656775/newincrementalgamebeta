@@ -73,20 +73,26 @@ function Ringdata(){
     {
       1:0,
       5:1,
-      10:4,
+      8:4,
       12:7,
+      17:10,
+      23:13,
     },
     {
       1:0,
       5:2,
       8:5,
       12:8,
+      17:11,
+      23:14,
     },
     {
       1:0,
       5:3,
       8:6,
       12:9,
+      17:12,
+      23:15,
     },
     {
       1:0,
@@ -251,6 +257,28 @@ function Ringdata(){
       passivefunction:[],
       preventchallenge:[8,9,10],
     },
+    {
+      //id:12
+      name:"試練7",
+      turn:20,
+      goal:140000,
+      exp:480,
+      setsizemin:1,
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[11],
+    },
+    {
+      //id:13
+      name:"試練8",
+      turn:30,
+      goal:350000,
+      exp:1920,
+      setsizemin:1,
+      setsizemax:3,
+      passivefunction:[],
+      preventchallenge:[12],
+    },
   ]
 
   this.availableskills = function(rings,r){
@@ -271,15 +299,26 @@ function Ringdata(){
       value:vl
     }
     for(e of state.fieldeffect){
-      eff = this.fieldeffects.find((elem) => elem.id ==e[0])
-      eff.effect(v)
+      if(e[0].timing == "skilluse"){
+        eff = this.fieldeffects.find((elem) => elem.id ==e[0])
+        eff.effect(v)
+      }
     }
     v.state[v.prop] += v.value
+  }
+
+  this.affectfield = function(st,i,vl){
+    v = {
+      state:st,
+      value:vl
+    }
+    v.state.fieldeffect.push([i,vl])
   }
 
   this.fieldeffects =[
     {
       id:1,
+      timing:"skilluse",
       effect:(v) =>{
         if(v.prop=='flowerpoint')v.value = Math.floor(v.value * 1.5)
       },
@@ -287,6 +326,7 @@ function Ringdata(){
     },
     {
       id:2,
+      timing:"skilluse",
       effect:(v) =>{
         if(v.prop=='snowpoint')v.value = Math.floor(v.value * 1.5)
       },
@@ -294,11 +334,37 @@ function Ringdata(){
     },
     {
       id:3,
+      timing:"skilluse",
       effect:(v) =>{
         if(v.prop=='moonpoint')v.value = Math.floor(v.value * 1.5)
       },
       description:"月の評価上昇量1.5倍"
-    }
+    },
+    {
+      id:4,
+      timing:"turnend",
+      effect:(v,val) =>{
+        console.log("boot")
+        v.flowerpoint += val
+      },
+      description:"花の評価上昇"
+    },
+    {
+      id:5,
+      timing:"turnend",
+      effect:(v,val) =>{
+        v.snowpoint += val
+      },
+      description:"雪の評価上昇"
+    },
+    {
+      id:6,
+      timing:"turnend",
+      effect:(v,val) =>{
+        v.moonpoint += val
+      },
+      description:"月の評価上昇"
+    },
   ]
 
   this.skills =[
@@ -408,6 +474,65 @@ function Ringdata(){
         level = this.getlevel(rings,ringid)
         this.affect(state,'moonpoint',Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level)*12))
         this.affect(state,'moonmultiplier',Math.max(-0.20,0.50-state.moonmultiplier))
+      }
+    },
+    //id:10
+    {
+      name:"花拡散",
+      tp:20,
+      effect:(rings) => {
+        state = rings.missionstate
+        ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
+        this.affect(state,'flowermultiplier',-0.20)
+        this.affect(state,'snowmultiplier',0.10)
+        this.affect(state,'moonmultiplier',0.10)
+      }
+    },
+    {
+      name:"雪拡散",
+      tp:20,
+      effect:(rings) => {
+        state = rings.missionstate
+        ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
+        this.affect(state,'snowmultiplier',-0.20)
+        this.affect(state,'flowermultiplier',0.10)
+        this.affect(state,'moonmultiplier',0.10)
+      }
+    },
+    {
+      name:"月拡散",
+      tp:20,
+      effect:(rings) => {
+        state = rings.missionstate
+        ringid = rings.setrings[state.activering]
+        level = this.getlevel(rings,ringid)
+        this.affect(state,'moonmultiplier',-0.20)
+        this.affect(state,'flowermultiplier',0.10)
+        this.affect(state,'snowmultiplier',0.10)
+      }
+    },
+    //id:13
+    {
+      name:"花充満",
+      tp:45,
+      effect:(rings) => {
+        this.affectfield(state,4,Math.floor(state.flowermultiplier * this.getstatus(ringid,0,level)))
+      }
+    },
+    {
+      name:"雪充満",
+      tp:45,
+      effect:(rings) => {
+        this.affectfield(state,5,Math.floor(state.snowmultiplier * this.getstatus(ringid,1,level)))
+      }
+    },
+    {
+      name:"月充満",
+      tp:45,
+      effect:(rings) => {
+        this.affectfield(state,6,Math.floor(state.moonmultiplier * this.getstatus(ringid,2,level)))
       }
     },
   ]
