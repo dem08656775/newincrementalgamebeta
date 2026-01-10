@@ -211,6 +211,40 @@ function Trophydata() {
       if (data.player.statue[0] >= 10) data.player.smalltrophies2nd[22] = true
       if (data.player.statue[1] >= 10) data.player.smalltrophies2nd[23] = true
       if (data.player.statue[2] >= 10) data.player.smalltrophies2nd[24] = true
+      if (data.player.statue[3] >= 10) data.player.smalltrophies2nd[25] = true
+      if (data.player.crown.greaterThanOrEqualTo(100)) data.player.smalltrophies2nd[26] = true
+      if (data.player.crown.greaterThanOrEqualTo(10000)) data.player.smalltrophies2nd[27] = true
+      if (data.player.crown.greaterThanOrEqualTo("1e8")) data.player.smalltrophies2nd[28] = true
+      if (data.player.lightmoney.greaterThanOrEqualTo(1)) data.player.smalltrophies2nd[29] = true
+      if (data.player.lightmoney.greaterThanOrEqualTo("1e9")) data.player.smalltrophies2nd[30] = true
+      if (data.player.lightmoney.greaterThanOrEqualTo("1e18")) data.player.smalltrophies2nd[31] = true
+      if (data.player.lightmoney.greaterThanOrEqualTo("1e36")) data.player.smalltrophies2nd[32] = true
+      if (data.player.flicker >= 10) data.player.smalltrophies2nd[33] = true
+      if (data.player.flicker >= 100) data.player.smalltrophies2nd[34] = true
+      if (data.player.flicker >= 1000) data.player.smalltrophies2nd[35] = true
+      if (data.player.flicker >= 10000) data.player.smalltrophies2nd[36] = true
+      if (data.player.flicker >= 100000) data.player.smalltrophies2nd[37] = true
+      if (data.player.flicker >= 1000000) data.player.smalltrophies2nd[38] = true
+      if (data.player.chip[5] > 0) data.player.smalltrophies2nd[39] = true
+      if (data.player.chip[5] >= 210) data.player.smalltrophies2nd[40] = true
+      if (data.player.chip[5] >= 1275) data.player.smalltrophies2nd[41] = true
+      if (data.player.chip[6] > 0) data.player.smalltrophies2nd[42] = true
+      if (data.player.chip[6] >= 210) data.player.smalltrophies2nd[43] = true
+      if (data.player.chip[6] >= 1275) data.player.smalltrophies2nd[44] = true
+      if (data.player.statue[4] >= 10) data.player.smalltrophies2nd[45] = true
+      if (data.player.statue[5] >= 10) data.player.smalltrophies2nd[46] = true
+      if (data.player.statue[6] >= 10) data.player.smalltrophies2nd[47] = true
+      if (data.player.statue[0] >= 64) data.player.smalltrophies2nd[48] = true
+      if (data.player.statue[1] >= 64) data.player.smalltrophies2nd[49] = true
+      if (data.player.statue[2] >= 64) data.player.smalltrophies2nd[50] = true
+      if (data.player.statue[3] >= 64) data.player.smalltrophies2nd[51] = true
+      if (data.player.statue[4] >= 64) data.player.smalltrophies2nd[52] = true
+      if (data.player.statue[5] >= 64) data.player.smalltrophies2nd[53] = true
+      if (data.player.statue[6] >= 64) data.player.smalltrophies2nd[54] = true
+      if (data.player.shine >= 100000000) data.player.smalltrophies2nd[55] = true
+      if (data.player.shine >= 1000000000) data.player.smalltrophies2nd[56] = true
+      if (data.player.brightness >= 100000) data.player.smalltrophies2nd[57] = true
+      if (data.player.brightness >= 1000000) data.player.smalltrophies2nd[58] = true
     }
   }
 }

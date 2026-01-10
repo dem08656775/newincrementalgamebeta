@@ -98,55 +98,5 @@ function Rankdata() {
     }
   }
 
-  this.setrankbonusetype = function (data, index) {
-    if (confirm("現在の上位効力を登録します。よろしいですか？")) {
-      let ans = []
-      for (let i = 0; i < 15; i++) {
-        if (data.player.rankchallengebonuses.includes(i)) {
-          ans.push(i)
-        }
-      }
-      if (index == 1) {
-        data.player.setrankchallengebonusesfst = ans
-      }
-      if (index == 2) {
-        data.player.setrankchallengebonusessnd = ans
-      }
-    }
-  }
 
-  this.changerankbonusetype = function (data, index) {
-    for (let i = 0; i < 15; i++) {
-      if (data.player.rankchallengebonuses.includes(i)) {
-        this.buyrankRewards(data, i)
-      }
-    }
-    if (index == 1) {
-      for (let i = 0; i < 15; i++) {
-        if (data.player.setrankchallengebonusesfst.includes(i)) {
-          this.buyrankRewards(data, i)
-        }
-      }
-    }
-    if (index == 2) {
-      for (let i = 0; i < 15; i++) {
-        if (data.player.setrankchallengebonusessnd.includes(i)) {
-          this.buyrankRewards(data, i)
-        }
-      }
-    }
-  }
-
-  this.buyrankRewards = function (data, index) {
-    if (data.player.rankchallengebonuses.includes(index)) {
-      data.player.rankchallengebonuses.splice(data.player.rankchallengebonuses.indexOf(index), 1)
-      data.player.ranktoken += data.challengedata.rewardcost[index]
-    } else {
-      if (data.player.ranktoken < data.challengedata.rewardcost[index]) {
-        return;
-      }
-      data.player.rankchallengebonuses.push(index)
-      data.player.ranktoken -= data.challengedata.rewardcost[index]
-    }
-  }
 }

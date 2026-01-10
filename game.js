@@ -191,15 +191,13 @@ Vue.createApp({
     },
     update() {
 
-      let diffm = this.diff
-      this.diff = Date.now() - this.time - this.player.tickspeed
+      let diffm = this.timedata.updateTime(this)
 
-      this.time = Date.now()
-      this.activechallengebonuses = (this.player.challengebonuses.includes(4) || !this.player.onchallenge) ? this.player.challengebonuses : []
+      this.challengedata.updateActiveChallengeBonuses(this)
 
       if (this.trophycheck) this.checktrophies()
       this.checkmemories()
-      this.checkworlds()
+      this.worlddata.checkworlds(this)
       this.countsmalltrophies()
       this.calccommonmult()
       this.findhighestgenerator()
@@ -223,46 +221,11 @@ Vue.createApp({
         this.player.activatedcampaigns = []
       }
 
-      this.shinedata.calcshinepersent(this)
-
-      let rememberlevel = Math.floor((this.checkremembers() + 16) / 16)
-
-      let shineget = this.shinedata.calcshineget(this)
-      let maxshine = this.shinedata.calcmaxshine(this)
-
-      if (this.player.shine < maxshine) {
-        this.player.shine = Math.min(this.player.shine + shineget, maxshine)
-      }
-
-      this.shinedata.calcbrightpersent(this)
-
-      let brightget = this.shinedata.calcbrightget(this)
-      let maxbright = this.shinedata.calcmaxbright(this)
-
-      if (this.player.brightness < maxbright) {
-        this.player.brightness = Math.min(this.player.brightness + brightget, maxbright);
-      }
-
-      this.flickerpersent = this.shinedata.getfp(this.pchallengestage)
-
-      let flickerget = this.shinedata.calcflickerget(this)
-
-      let maxflicker = this.shinedata.getmaxfl(this.pchallengestage)
-      if (this.player.flicker < maxflicker) {
-        this.player.flicker = Math.min(this.player.flicker + flickerget, maxflicker);
-      }
+      this.shinedata.updateShine(this)
 
       this.automationdata.updateAutoBuyers(this)
 
-      this.player.tickspeed = this.timedata.calctickspeed(this)
-
-      if (this.player.rankchallengebonuses.includes(9)) {
-        this.multbyac = new Decimal(50).div(this.player.tickspeed)
-        this.player.tickspeed = 50
-      } else {
-        this.multbyac = new Decimal(1)
-      }
-      if (this.player.accelevelused == this.player.accelevel && this.player.tickspeed <= 10) this.player.accelevel = this.player.accelevel + 1
+      this.timedata.updateTickspeed(this)
 
 
 
@@ -325,19 +288,19 @@ Vue.createApp({
       this.challengedata.setbonusetype(this, index)
     },
     setrankbonusetype(index) {
-      this.rankdata.setrankbonusetype(this, index)
+      this.challengedata.setrankbonusetype(this, index)
     },
     changebonusetype(index) {
       this.challengedata.changebonusetype(this, index)
     },
     changerankbonusetype(index) {
-      this.rankdata.changerankbonusetype(this, index)
+      this.challengedata.changerankbonusetype(this, index)
     },
     buyRewards(index) {
       this.challengedata.buyRewards(this, index)
     },
     buyrankRewards(index) {
-      this.rankdata.buyrankRewards(this, index)
+      this.challengedata.buyrankRewards(this, index)
     },
     calclevelitemcost(index) {
       return this.levelshopdata.calclevelitemcost(this, index)
@@ -589,35 +552,7 @@ Vue.createApp({
       return this.rememberdata.checkremembers(this)
     },
     checkworlds() {
-
-      this.worldopened[0] = true
-      if (new Decimal(this.players[0].crownresettime).gt(0)) {
-        for (let i = 1; i < 10; i++) {
-          this.worldopened[i] = true
-        }
-      }
-
-      if (this.players[0].challengecleared.includes(238)) this.worldopened[1] = true
-      if (this.players[0].challengecleared.length >= 100) this.worldopened[2] = true
-      if (this.players[0].rankchallengecleared.length >= 16) this.worldopened[3] = true
-      if (this.players[0].levelitembought >= 12500) this.worldopened[4] = true
-      if (new Decimal(this.players[0].darkmoney).greaterThanOrEqualTo('1e8')) this.worldopened[5] = true
-      if (new Decimal(this.players[0].rank).greaterThanOrEqualTo(262142)) this.worldopened[6] = true
-      if (this.players[0].rankchallengecleared.includes(238)) this.worldopened[7] = true
-      if (this.players[0].challengecleared.length >= 200) this.worldopened[8] = true
-      if (this.players[0].rankchallengecleared.length >= 200) this.worldopened[9] = true
-
-      if (new Decimal(this.players[0].crownresettime).gt(0)) {
-        for (let i = 1; i < 10; i++) {
-          this.worldopened[i] = true
-        }
-      }
-
-      if (new Decimal(this.players[0].lightmoney).greaterThanOrEqualTo('1e8')) this.worldopened[10] = true
-      if (this.players[0].statue[2] >= 16) this.worldopened[11] = true
-
-
-
+      this.worlddata.checkworlds(this)
     },
 
     toFormated(dec, exp) {

@@ -234,4 +234,33 @@ function Worlddata() {
 
         }
     }
+
+    this.checkworlds = function (data) {
+
+        data.worldopened[0] = true
+        if (new Decimal(data.players[0].crownresettime).gt(0)) {
+            for (let i = 1; i < 10; i++) {
+                data.worldopened[i] = true
+            }
+        }
+
+        if (data.players[0].challengecleared.includes(238)) data.worldopened[1] = true
+        if (data.players[0].challengecleared.length >= 100) data.worldopened[2] = true
+        if (data.players[0].rankchallengecleared.length >= 16) data.worldopened[3] = true
+        if (data.players[0].levelitembought >= 12500) data.worldopened[4] = true
+        if (new Decimal(data.players[0].darkmoney).greaterThanOrEqualTo('1e8')) data.worldopened[5] = true
+        if (new Decimal(data.players[0].rank).greaterThanOrEqualTo(262142)) data.worldopened[6] = true
+        if (data.players[0].rankchallengecleared.includes(238)) data.worldopened[7] = true
+        if (data.players[0].challengecleared.length >= 200) data.worldopened[8] = true
+        if (data.players[0].rankchallengecleared.length >= 200) data.worldopened[9] = true
+
+        if (new Decimal(data.players[0].crownresettime).gt(0)) {
+            for (let i = 1; i < 10; i++) {
+                data.worldopened[i] = true
+            }
+        }
+
+        if (new Decimal(data.players[0].lightmoney).greaterThanOrEqualTo('1e8')) data.worldopened[10] = true
+        if (data.players[0].statue[2] >= 16) data.worldopened[11] = true
+    }
 }
