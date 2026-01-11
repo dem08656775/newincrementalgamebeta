@@ -1,9 +1,7 @@
 
-
 Vue.createApp({
   data() {
     return {
-
       whole: this,
       player: initialData(),
 
@@ -72,8 +70,6 @@ Vue.createApp({
       pipedsmalltrophy: 0,
       worldopened: new Array(worldnum).fill(null).map(() => false),
 
-
-
       chipused: new Array(setchipkind).fill(null).map(() => 0),
 
       pchallengestage: 0,
@@ -82,9 +78,6 @@ Vue.createApp({
 
       time: 0,
       diff: 0,
-
-
-
     }
   },
   computed: {
@@ -93,7 +86,6 @@ Vue.createApp({
     }
   },
   methods: {
-
     exportsave() {
       this.storagedata.exportsave(this)
     },
@@ -112,7 +104,6 @@ Vue.createApp({
     load(world) {
       this.storagedata.load(this, world)
     },
-
     configshowmult() {
       this.showmult = !this.showmult
     },
@@ -122,52 +113,39 @@ Vue.createApp({
     strongsoftcap(num, cap) {
       return this.utilsdata.strongsoftcap(num, cap)
     },
-
     calcgncost() {
       this.generatordata.calcgncost(this)
     },
-
     calcaccost() {
       this.acceleratordata.calcaccost(this)
     },
     calcdgcost() {
       this.darkdata.calcdgcost(this)
     },
-
     calclgcost() {
       this.lightdata.calclgcost(this)
     },
-
     calccommonmult() {
       this.generatordata.calccommonmult(this)
     },
-
     calcincrementmult(i, to) {
       return this.generatordata.calcincrementmult(this, i, to)
     },
-
     calcbasicincrementmult(i) {
       this.generatordata.calcbasicincrementmult(this, i)
     },
-
-
     updategenerators(mu) {
       this.generatordata.updategenerators(this, mu)
     },
-
-
-
     updateaccelerators(mu) {
       this.acceleratordata.updateaccelerators(this, mu)
     },
-
     updatedarkgenerators(mu) {
       this.darkdata.updatedarkgenerators(this, mu)
     },
     updatelightgenerators(mu) {
       this.lightdata.updatelightgenerators(this, mu)
     },
-
     spendshine(num) {
       this.shinedata.spendshine(this, num)
     },
@@ -190,7 +168,6 @@ Vue.createApp({
       this.generatordata.findhighestgenerator(this)
     },
     update() {
-
       let diffm = this.timedata.updateTime(this)
 
       this.challengedata.updateActiveChallengeBonuses(this)
@@ -222,17 +199,11 @@ Vue.createApp({
       }
 
       this.shinedata.updateShine(this)
-
       this.automationdata.updateAutoBuyers(this)
-
       this.timedata.updateTickspeed(this)
-
-
-
 
       setTimeout(this.update, Math.max(this.player.tickspeed - (this.diff + diffm) / 2, 1));
     },
-
     changeTab(tabname) {
       this.player.currenttab = tabname;
     },
@@ -332,28 +303,18 @@ Vue.createApp({
     calcgainlevel() {
       return this.leveldata.calcgainlevel(this)
     },
-
     configspendchip(i) {
       this.chipdata.configspendchip(this, i)
     },
-
-
     resetDarklevel() {
       this.darkdata.resetDarklevel(this)
     },
-
-
-
-
-
     resetLevel(force, exit) {
       this.leveldata.resetLevel(this, force, exit)
     },
-
     resetLevelborder() {
       return this.leveldata.resetLevelborder(this)
     },
-
     resetRank(force) {
       this.rankdata.resetRank(this, force)
     },
@@ -366,8 +327,6 @@ Vue.createApp({
     resetCrown(force) {
       this.crowndata.resetCrown(this, force)
     },
-
-
     calcchallengeid() {
       return this.challengedata.calcchallengeid(this)
     },
@@ -398,18 +357,12 @@ Vue.createApp({
     startpChallenge() {
       this.challengedata.startpChallenge(this)
     },
-
-
     exitChallenge() {
       this.challengedata.exitChallenge(this)
     },
-
     exitpChallenge() {
       this.challengedata.exitpChallenge(this)
     },
-
-
-
     gettrophyname(i) {
       return this.trophydata.gettrophyname(this, i)
     },
@@ -419,123 +372,88 @@ Vue.createApp({
     shrinkworld(i) {
       this.worlddata.shrinkworld(this, i)
     },
-
     calcmaxpipe() {
       return this.worlddata.calcmaxpipe(this)
     },
-
     openpipe(i) {
       this.worlddata.openpipe(this, i)
     },
-
     confchecktrophies() {
       this.trophydata.confchecktrophies(this)
     },
-
     checktrophies() {
       this.trophydata.checktrophies(this)
     },
-
-
-
-
-
-
-
-
     chipset(i, j) {
       this.chipdata.chipset(this, i, j)
     },
-
     checkusedchips() {
       this.chipdata.checkusedchips(this)
     },
-
     calcstatuecost(i) {
       return this.statuedata.calcstatuecost(this, i)
     },
-
     buildstatue(i) {
       this.statuedata.buildstatue(this, i)
     },
-
     calcpolishcost(i) {
       return this.statuedata.calcpolishcost(this, i)
     },
-
     polishstatue(i) {
       this.statuedata.polishstatue(this, i)
     },
-
     calcpolishcostbr(i) {
       return this.statuedata.calcpolishcostbr(this, i)
     },
-
     polishstatuebr(i) {
       this.statuedata.polishstatuebr(this, i)
     },
-
     buyspirit(i) {
       return
       this.player.spiritlevela[i] += 1;
     },
-
     isavailablering(i) {
       return this.ringdata.isavailablering(this, i)
     },
-
     configsetrings(i) {
       this.ringdata.configsetrings(this, i)
     },
-
     sleep(ms) {
       this.utilsdata.sleep(ms)
     },
-
     configautomission() {
       this.ringdata.configautomission(this)
     },
-
     autoplaymission() {
       this.ringdata.autoplaymission(this)
     },
-
     isavailablemission(i) {
       return this.ringdata.isavailablemission(this, i)
     },
-
     startmission(i) {
       this.ringdata.startmission(this, i)
     },
-
     useskill(i) {
       this.ringdata.useskill(this, i)
     },
-
     endmission() {
       this.ringdata.endmission(this)
     },
-
     ringpointsum() {
       return this.ringdata.ringpointsum(this)
     },
-
     worktime(val) {
       this.timedata.worktime(this, val)
     },
-
     calccampaigncosts() {
       return this.timedata.calccampaigncosts(this)
     },
-
     choosecampaigns(name) {
       this.timedata.choosecampaigns(this, name)
     },
-
     activateintimecampaign() {
       this.timedata.activateintimecampaign(this)
     },
-
     counttrophies(index) {
       this.trophydata.counttrophies(this, index)
     },
@@ -554,26 +472,18 @@ Vue.createApp({
     checkworlds() {
       this.worlddata.checkworlds(this)
     },
-
     toFormated(dec, exp) {
       return this.utilsdata.toFormated(dec, exp)
     }
-
   },
-
   mounted() {
     this.dataload();
     this.load(0);
-
     this.checkmemories();
     this.checkworlds();
     this.checkusedchips();
-
     this.time = Date.now()
-
-
     setTimeout(this.update, this.player.tickspeed);
     setInterval(this.save, 2000);
-
   },
 }).mount('#app');

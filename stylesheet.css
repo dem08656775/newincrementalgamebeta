@@ -272,7 +272,7 @@ button.unavailable,
 }
 
 /* Selected States */
-/* Selected States - Force Accent Color */
+/* Selected States - Black Background with White Text (黒背景白文字) */
 .selected,
 button.selected,
 .autobuyerbutton.selected,
@@ -282,9 +282,9 @@ button.selected,
 .wdbutton.selected,
 .buytypebutton.selected,
 .llbutton.selected {
-  background-color: var(--accent) !important;
-  color: white !important;
-  border-color: var(--accent) !important;
+  background-color: var(--text-primary) !important;
+  color: var(--bg-secondary) !important;
+  border: 2px solid var(--text-primary) !important;
   font-weight: 600;
 }
 
@@ -444,6 +444,38 @@ button.selected,
 
 .chip-list-item {
   justify-content: space-between;
+}
+
+/* Chip Action Unit: Button + Info */
+/* Chip Action Unit: Button + Info */
+.chip-action-unit {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2px;
+  vertical-align: top;
+  height: auto !important;
+  /* Force auto height */
+}
+
+/* Specific fix for buttons inside chip action unit to prevent stretching or huge fixed width */
+.chip-action-unit button {
+  flex: 0 0 auto !important;
+  /* Override generic list button width */
+  width: auto !important;
+  min-width: 60px;
+  height: auto !important;
+  padding: 2px 6px;
+  line-height: normal;
+}
+
+.chip-cost-info {
+  font-size: 0.7em;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
 }
 
 /* 
