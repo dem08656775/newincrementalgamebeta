@@ -929,7 +929,7 @@
 							</div>
 						</div>
 						<div class="actions">
-							<span v-for="j in 10" :key="j" class="chip-action-unit" v-if="player.chip[j-1]>0">
+							<span v-for="j in 10" :key="j" class="chip-action-unit" v-show="player.chip[j-1]>0">
 								<button @click="chipset(i-1,j)" class="abutton" style="width:auto; min-width:60px;">
 									{{ chipdata.chipname[j-1] }}
 								</button>
@@ -952,7 +952,7 @@
 							</div>
 						</div>
 						<div class="actions">
-							<span v-for="j in 10" :key="j" class="chip-action-unit" v-if="player.chip[j-1]>0">
+							<span v-for="j in 10" :key="j" class="chip-action-unit" v-show="player.chip[j-1]>0">
 								<button @click="chipset(i+32-1,j)" class="abutton" style="width:auto; min-width:60px;">
 									{{ chipdata.chipname[j-1] }}
 								</button>
