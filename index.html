@@ -205,7 +205,7 @@
 						</div>
 
 						<div v-for="i in 6" :key="i">
-							<div class="accelerator-item" v-if="player.levelitems[3]>=i">
+							<div class="accelerator-item" v-show="player.levelitems[3]>=i">
 								<div class="info">
 									時間加速器{{i+2}}: {{ toFormated(player.accelerators[i+1],5) }}
 								</div>
@@ -896,7 +896,7 @@
 				所持鋳片
 				<div class="chip-list-container">
 					<div v-for="i in 10" :key="i">
-						<div class="chip-list-item" v-if="player.chip[i-1]>0">
+						<div class="chip-list-item" v-show="player.chip[i-1]>0">
 							<span>{{ chipdata.chipname[i-1] + "片"　}}</span>
 							<span>{{ player.chip[i-1] }}</span>
 						</div>
@@ -910,7 +910,7 @@
 					洗練:洗練とは、段位リセット時に鋳片を消費して、質の高い鋳片の入手率を向上させることです。
 					洗練度: {{ chipdata.calcchipretrytime(whole) }}
 					<div v-for="i in 9" :key="i">
-						<div class="chip-item" v-if="player.statue[i-1]>0">
+						<div class="chip-item" v-show="player.statue[i-1]>0">
 							<button type="button" @click="configspendchip(i-1)">
 								{{ chipdata.chipname[i-1] + "片" }}:消費数登録
 							</button>
@@ -924,7 +924,7 @@
 					<div class="chip-item" v-for="i in 32" :key="i">
 						<div class="info">
 							鋳片効力 {{ i }} : {{ chipdata.chipbonusname[i-1] }}
-							<span v-if="player.disabledchip[i-1]">（無効）</span>
+							<span v-show="player.disabledchip[i-1]">（無効）</span>
 							<div>現在: {{ player.setchip[i-1]==0?"なし":chipdata.chipname[player.setchip[i-1]-1] +"片"}}
 							</div>
 						</div>
@@ -946,7 +946,7 @@
 					<div class="chip-item" v-for="i in 20" :key="i">
 						<div class="info">
 							鋳片効力 {{ i+32 }} : {{ chipdata.chipbonusname[i+32-1] }}
-							<span v-if="player.disabledchip[i+32-1]">（無効）</span>
+							<span v-show="player.disabledchip[i+32-1]">（無効）</span>
 							<div>現在: {{ player.setchip[i+32-1]==0?"なし":chipdata.chipname[player.setchip[i+32-1]-1]
 								+"片"}}
 							</div>
@@ -987,7 +987,7 @@
 				<div class="statue-container">
 					<div v-for="i in 10" :key="i">
 						<div class="statue-item"
-							v-if="player.chip[i-1]>0 || chipused[i-1]>0 || player.statue[i-1]>0 ">
+							v-show="player.chip[i-1]>0 || chipused[i-1]>0 || player.statue[i-1]>0 ">
 							<div class="info">
 								<div>{{chipdata.chipname[i-1] + "像"}}: {{ player.statue[i-1] }}</div>
 								<div>{{"輝" + chipdata.chipname[i-1] + "像"}}: {{ player.polishedstatue[i-1] + "/" +
@@ -1003,12 +1003,12 @@
 									@click="buildstatue(i-1)">
 									設像 ({{ calcstatuecost(i-1) }} 片)
 								</button>
-								<button v-if="player.shine>0" type="button" class="abutton"
+								<button v-show="player.shine>0" type="button" class="abutton"
 									:class="{'unavailable': player.shine < calcpolishcost(i-1) || player.polishedstatue[i-1] >= player.statue[i-1]}"
 									@click="polishstatue(i-1)">
 									磨像 ({{ calcpolishcost(i-1) }} 輝)
 								</button>
-								<button v-if="player.brightness>0" type="button" class="abutton"
+								<button v-show="player.brightness>0" type="button" class="abutton"
 									:class="{'unavailable': player.brightness < calcpolishcostbr(i-1) || player.polishedstatuebr[i-1] >= player.polishedstatue[i-1] * 10}"
 									@click="polishstatuebr(i-1)">
 									磨像 ({{ calcpolishcostbr(i-1) }} 煌)
@@ -1031,7 +1031,7 @@
 				<div v-if="!player.rings.onmission">
 					<div>
 						<div v-for="i in 13" :key="i">
-							<div v-if="isavailablering(i-1)">
+							<div v-show="isavailablering(i-1)">
 								<button type="button" @click="configsetrings(i-1)">
 									使用輪設定 {{ i }}
 								</button>
@@ -1042,8 +1042,8 @@
 					</div>
 					<div>試練</div>
 					<div v-for="i in ringdata.missioninfo.length" :key="i">
-						<div v-if="isavailablemission(i-1)">
-							<button type="button" v-if="isavailablemission(i-1)" @click="startmission(i-1)">
+						<div v-show="isavailablemission(i-1)">
+							<button type="button" v-show="isavailablemission(i-1)" @click="startmission(i-1)">
 								{{ ringdata.missioninfo[i-1].name }}開始
 							</button>
 							周期:{{ ringdata.missioninfo[i-1].turn }} 目標:{{ ringdata.missioninfo[i-1].goal }} 最小輪数:{{
@@ -1095,7 +1095,7 @@
 							v-for="i in ringdata.availableskills(player.rings,player.rings.setrings[player.rings.missionstate.activering]).length"
 							:key="i">
 							<button
-								v-if="player.rings.missionstate.turn < ringdata.missioninfo[this.player.rings.missionid].turn"
+								v-show="player.rings.missionstate.turn < ringdata.missioninfo[this.player.rings.missionid].turn"
 								type="button" @click="useskill(i-1)">
 								{{
 								ringdata.skills[ringdata.availableskills(player.rings,player.rings.setrings[player.rings.missionstate.activering])[i-1]].name
@@ -1130,7 +1130,7 @@
 							<tr>
 								<template v-for="j in 10" :key="j">
 									<td>
-										<span v-if="player.smalltrophies[(i-1)*10+(j-1)]">{{ (i-1)*10+j }}</span>
+										<span v-show="player.smalltrophies[(i-1)*10+(j-1)]">{{ (i-1)*10+j }}</span>
 									</td>
 								</template>
 							</tr>
@@ -1144,7 +1144,7 @@
 							<tr>
 								<template v-for="j in 10" :key="j">
 									<td>
-										<span v-if="player.smalltrophies2nd[(i-1)*10+(j-1)]">{{ 100+(i-1)*10+j
+										<span v-show="player.smalltrophies2nd[(i-1)*10+(j-1)]">{{ 100+(i-1)*10+j
 											}}</span>
 									</td>
 								</template>
