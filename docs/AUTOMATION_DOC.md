@@ -8,13 +8,13 @@
 
 ゲームには以下の自動化カテゴリが存在します：
 
-1. **コアオートバイヤー** - 発生器・加速器・リセットの自動化 (`automation.js`)
-2. **輪自動化** - リングシステム関連の自動化 (`ring.js`)
-3. **外部自動化** - シャイン/ブライト消費、挑戦の自動化 (`shine.js`, `ring.js`)
+1. **コアオートバイヤー** - 発生器・加速器・リセットの自動化 (`game/automation.js`)
+2. **輪自動化** - リングシステム関連の自動化 (`game/ring.js`)
+3. **外部自動化** - シャイン/ブライト消費、挑戦の自動化 (`game/shine.js`, `game/ring.js`)
 
 ---
 
-## 1. コアオートバイヤー (`automation.js`)
+## 1. コアオートバイヤー (`game/automation.js`)
 
 ### アーキテクチャ
 
@@ -37,7 +37,7 @@ Automationdata クラス
 
 > **注意**: Index 4 は未使用
 
-### データ変数（Vueインスタンス `game.js`）
+### データ変数（Vueインスタンス `game/game.js`）
 
 ```javascript
 // data() 内で定義
@@ -140,7 +140,7 @@ if (
 
 ---
 
-## 2. 輪自動化 (`ring.js`)
+## 2. 輪自動化 (`game/ring.js`)
 
 ### 自動周回
 
@@ -193,7 +193,7 @@ autoplaymission(data) {
 
 リングシステムクリアで解放される、メインゲームの自動化機能。
 
-### データ構造 (`constants.js`)
+### データ構造 (`game/constants.js`)
 
 ```javascript
 player.rings.outsideauto = {
@@ -217,7 +217,7 @@ player.rings.outsideauto = {
 
 ### 実装詳細
 
-#### toggleringautobuyer (ring.js)
+#### toggleringautobuyer (game/ring.js)
 
 ```javascript
 toggleringautobuyer(data, index) {
@@ -260,7 +260,7 @@ toggleringautobuyer(data, index) {
 }
 ```
 
-#### configringautobuyer (ring.js)
+#### configringautobuyer (game/ring.js)
 
 ```javascript
 configringautobuyer(data, index) {
@@ -278,7 +278,7 @@ configringautobuyer(data, index) {
 }
 ```
 
-### 自動化コールバック (shine.js)
+### 自動化コールバック (game/shine.js)
 
 ```javascript
 // 輝き自動消費
@@ -316,14 +316,14 @@ autochallenge(data) {
 各自動化機能は `setInterval` でタイマーを使用。タイマーIDはVueインスタンスで管理。
 
 ```javascript
-// game.js data()
+// game/game.js data()
 automissiontimerid: 0,     // リング自動周回
 autoshinetimerid: 0,       // 輝き自動消費
 autobrighttimerid: 0,      // 煌き自動消費
 autochallengetimerid: 0,   // 自動挑戦
 ```
 
-### セーブ/ロード時の復元 (storage.js)
+### セーブ/ロード時の復元 (game/storage.js)
 
 ```javascript
 // load() 内
@@ -345,7 +345,7 @@ if (data.player.rings.auto.doauto) {
 `autodochallenge` が有効な場合、発生器倍率が低下:
 
 ```javascript
-// generator.js - calccommonmult()
+// game/generator.js - calccommonmult()
 if (data.player.rings.outsideauto.autodochallenge) {
   base = base.mul(0.25); // 25%に減少
 }
@@ -384,12 +384,12 @@ UI上で「オンにすると2秒ほどゲームが停止します」と表示�
 ## 新しい自動化機能の追加手順
 
 1. **フラグ変数の追加**
-   - `game.js` の `data()` に新フラグを追加
-   - 永続化が必要なら `constants.js` の `initialData()` にも追加
+   - `game/game.js` の `data()` に新フラグを追加
+   - 永続化が必要なら `game/constants.js` の `initialData()` にも追加
 
 2. **トグル関数の拡張**
-   - `automation.js` の `toggleautobuyer()` に新indexを追加
-   - または `ring.js` の `toggleringautobuyer()` を拡張
+   - `game/automation.js` の `toggleautobuyer()` に新indexを追加
+   - または `game/ring.js` の `toggleringautobuyer()` を拡張
 
 3. **設定関数の拡張**（必要な場合）
    - `configautobuyer()` または `configringautobuyer()` を拡張
@@ -403,7 +403,7 @@ UI上で「オンにすると2秒ほどゲームが停止します」と表示�
    - 解放条件の `v-if` ディレクティブを設定
 
 6. **セーブ/ロード対応**
-   - `storage.js` の `load()` でタイマー復元処理を追加
+   - `game/storage.js` の `load()` でタイマー復元処理を追加
 
 ---
 

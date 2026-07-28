@@ -6,13 +6,13 @@
 
 ## 全体構造
 
-ゲームは `game/index.html` のタブ UI と、機能別の `*data` クラスで構成されています。`game/game.js` が Vue アプリの入口になり、各機能クラスを `data()` で保持し、UI から呼ばれるメソッドを各クラスへ委譲します。
+ゲームは `index.html` のタブ UI と、機能別の `*data` クラスで構成されています。`game/game.js` が Vue アプリの入口になり、各機能クラスを `data()` で保持し、UI から呼ばれるメソッドを各クラスへ委譲します。
 
 主な進行は、ポイント獲得、発生器購入、時間加速、リセット階層、挑戦、上位通貨、ワールド拡張、補助ミニゲームの順に広がります。
 
 ## 通常タブ
 
-関連ファイル: `index.html`, `game.js`, `generator.js`, `accelerator.js`, `time.js`
+関連ファイル: `index.html`, `game/game.js`, `game/generator.js`, `game/accelerator.js`, `game/time.js`
 
 通常タブはゲームの基本ループです。ポイント `money` を使って発生器と時間加速器を購入し、発生器がポイントまたは下位発生器を増やします。
 
@@ -51,7 +51,7 @@
 
 ## 段位
 
-関連ファイル: `level.js`, `levelshop.js`, `index.html`
+関連ファイル: `game/level.js`, `game/levelshop.js`, `index.html`
 
 段位は最初のリセット階層です。ポイントをリセットして `level` と `levelresettime` を獲得します。発生器倍率、段位効力、チップ獲得などの基盤になります。
 
@@ -85,7 +85,7 @@
 
 ## 階位
 
-関連ファイル: `rank.js`, `challenge.js`, `markstone.js`, `index.html`
+関連ファイル: `game/rank.js`, `game/challenge.js`, `game/markstone.js`, `index.html`
 
 階位は2番目のリセット階層です。段位を含む下位進行をリセットし、`rank` と `rankresettime` を得ます。階位挑戦、階位効力、印石獲得の入口でもあります。
 
@@ -119,7 +119,7 @@
 
 ## 冠位
 
-関連ファイル: `crown.js`, `index.html`
+関連ファイル: `game/crown.js`, `index.html`
 
 冠位は3番目のリセット階層です。階位以下をリセットして `crown` と `crownresettime` を得ます。
 
@@ -148,7 +148,7 @@
 
 ## 裏
 
-関連ファイル: `dark.js`, `index.html`
+関連ファイル: `game/dark.js`, `index.html`
 
 裏は通常発生器とは別系統の高位発生器です。裏発生器は裏ポイント `darkmoney` を生産し、裏ポイントや裏発生器は通常発生器を強化します。
 
@@ -175,7 +175,7 @@
 
 ## 天上
 
-関連ファイル: `light.js`, `index.html`
+関連ファイル: `game/light.js`, `index.html`
 
 天上は裏より上位の発生器系統です。天上ポイント `lightmoney` を生産し、裏発生器の生産に倍率を与えます。
 
@@ -199,7 +199,7 @@
 
 ## 挑戦
 
-関連ファイル: `challenge.js`, `level.js`, `rank.js`, `index.html`
+関連ファイル: `game/challenge.js`, `game/level.js`, `game/rank.js`, `index.html`
 
 挑戦は制約付きの進行モードです。通常挑戦、階位挑戦、完全挑戦の3系統があります。
 
@@ -241,7 +241,7 @@
 
 ## 輝き・煌き・瞬き
 
-関連ファイル: `shine.js`, `statue.js`, `ring.js`, `index.html`
+関連ファイル: `game/shine.js`, `game/statue.js`, `game/ring.js`, `index.html`
 
 輝き系は時間経過で確率獲得する特殊通貨です。直接消費により発生器や上位系統へ一時的な生産処理を走らせます。
 
@@ -278,7 +278,7 @@
 
 ## 自動
 
-関連ファイル: `automation.js`, `ring.js`, `shine.js`, `index.html`
+関連ファイル: `game/automation.js`, `game/ring.js`, `game/shine.js`, `index.html`
 
 自動タブは自動購入、自動リセット、輪由来の外部自動化を扱います。
 
@@ -318,7 +318,7 @@
 
 ## 鋳片
 
-関連ファイル: `chip.js`, `level.js`, `index.html`
+関連ファイル: `game/chip.js`, `game/level.js`, `index.html`
 
 鋳片は昇段リセット時に獲得する強化素材です。鋳片をスロットに装着することで各種倍率や獲得量を強化します。
 
@@ -354,7 +354,7 @@
 
 ## 像
 
-関連ファイル: `statue.js`, `chip.js`, `challenge.js`, `index.html`
+関連ファイル: `game/statue.js`, `game/chip.js`, `game/challenge.js`, `index.html`
 
 像は鋳片を消費して作る上位強化です。輝きや煌きで研磨でき、上位通貨の獲得量や上限にも関わります。
 
@@ -383,7 +383,7 @@
 
 ## 輪
 
-関連ファイル: `ring.js`, `shine.js`, `automation.js`, `index.html`
+関連ファイル: `game/ring.js`, `game/shine.js`, `game/automation.js`, `index.html`
 
 輪はターン制ミニゲームです。輪をセットして試練を開始し、花/雪/月の評価点を稼いで目標に到達するとクリアになります。
 
@@ -421,7 +421,7 @@
 
 ## 世界・記憶・思い出
 
-関連ファイル: `world.js`, `remember.js`, `trophy.js`, `storage.js`, `index.html`
+関連ファイル: `game/world.js`, `game/remember.js`, `game/trophy.js`, `game/storage.js`, `index.html`
 
 世界は複数ワールド制の進行です。各世界は `players[world]` に独立保存され、条件達成で別世界へ移動できます。世界収縮により記憶を思い出に変化させます。
 
@@ -459,7 +459,7 @@
 
 ### 世界収縮で残るもの・消えるもの
 
-関連処理: `world.js` の `shrinkworld(data, i)`
+関連処理: `game/world.js` の `shrinkworld(data, i)`
 
 収縮は対象世界 `players[i]` を `initialData()` で初期化し直す処理です。初期化前に一部の値だけ退避し、初期化後に戻します。その後、全世界の思い出数 `checkremembers()` に応じた補填を追加します。
 
@@ -533,7 +533,7 @@
 
 ## 実績
 
-関連ファイル: `trophy.js`, `world.js`, `index.html`
+関連ファイル: `game/trophy.js`, `game/world.js`, `index.html`
 
 実績は進行状態に応じて自動判定されるメタ進行です。メイン実績、小実績、第2小実績があります。
 
@@ -560,7 +560,7 @@
 
 ## 時
 
-関連ファイル: `time.js`, `level.js`, `index.html`
+関連ファイル: `game/time.js`, `game/level.js`, `index.html`
 
 時は時間回帰力、時間結晶、キャンペーンを扱う補助コンテンツです。
 
@@ -590,7 +590,7 @@
 
 ## 印石
 
-関連ファイル: `markstone.js`, `rank.js`, `crown.js`, `generator.js`, `automation.js`, `index.html`
+関連ファイル: `game/markstone.js`, `game/rank.js`, `game/crown.js`, `game/generator.js`, `game/automation.js`, `index.html`
 
 印石は階位リセットと連動する後半コンテンツです。選択した印石を階位リセット時に獲得し、印石効果、印石リセット、大印石、較正ミニゲームへ進みます。
 
@@ -624,12 +624,12 @@
 開発注意:
 
 - 自動昇階には「印石が入手可能なときだけ昇階する」オプションがある。
-- 較正が有効な間は `time.js` で `tickspeed` が1000に固定される。
+- 較正が有効な間は `game/time.js` で `tickspeed` が1000に固定される。
 - 冠位リセット時に冠位中入手数カウンターが初期化される。
 
 ## 精霊
 
-関連ファイル: `spirit.js`, `index.html`
+関連ファイル: `game/spirit.js`, `index.html`
 
 精霊は現状ほぼ未実装のコンテンツです。UI タブとデータの骨組みだけが存在します。
 
@@ -654,7 +654,7 @@
 
 ## 設定・保存・共有
 
-関連ファイル: `storage.js`, `social.js`, `index.html`
+関連ファイル: `game/storage.js`, `game/social.js`, `index.html`
 
 設定タブはデータリセット、Tweet対象設定、セーブエクスポート/インポートを扱います。
 
@@ -675,14 +675,14 @@
 - ロード時は `deepmerge(initialData(), saved)` で旧セーブを補完し、主要な `Decimal` フィールドを復元する。
 - エクスポートは Base64 文字列として画面表示またはテキストファイル保存する。
 - インポートは入力された Base64 を `localStorage` へ保存し、世界0をロードする。
-- Tweet リンクは `social.js` の `getTweetLink()` で、`player.tweeting` の選択に応じて生成される。
+- Tweet リンクは `game/social.js` の `getTweetLink()` で、`player.tweeting` の選択に応じて生成される。
 
 ## コンテンツ追加時の確認項目
 
-- `constants.js` の `initialData()` に保存データが必要か。
-- `storage.js` のロード時に `Decimal` 復元や旧セーブ補完が必要か。
-- `game.js` の `data()` に機能クラスのインスタンスが必要か。
-- `game.js` の `methods` に UI から呼ぶ委譲メソッドが必要か。
+- `game/constants.js` の `initialData()` に保存データが必要か。
+- `game/storage.js` のロード時に `Decimal` 復元や旧セーブ補完が必要か。
+- `game/game.js` の `data()` に機能クラスのインスタンスが必要か。
+- `game/game.js` の `methods` に UI から呼ぶ委譲メソッドが必要か。
 - `index.html` のタブ表示条件、ボタン表示条件、現在タブ判定が必要か。
 - リセット時に初期化するか、保持するか。
 - ワールド収縮時に初期化するか、保持するか。

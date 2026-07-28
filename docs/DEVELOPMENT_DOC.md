@@ -11,8 +11,8 @@
 | 項目           | 技術                               |
 | -------------- | ---------------------------------- |
 | フレームワーク | Vue.js 3 (Options API)             |
-| 大数処理       | break_infinity.js (Decimal クラス) |
-| スタイル       | stylesheet.css (バニラCSS)         |
+| 大数処理       | game/break_infinity.js (Decimal クラス) |
+| スタイル       | game/stylesheet.css (バニラCSS)         |
 | セーブデータ   | localStorage (Base64エンコード)    |
 
 ---
@@ -21,39 +21,40 @@
 
 ```
 ├── index.html        # メインHTML、Vue テンプレート
-├── game.js           # Vue app 本体、メインロジック
-├── constants.js      # 定数、初期データ生成 (initialData)
-├── generator.js      # 通常発生器 (8階層)
-├── accelerator.js    # 時間加速器 (8階層)
-├── dark.js           # ダーク発生器・ダークポイント
-├── light.js          # ライト発生器・ライトポイント
-├── level.js          # 段位リセット (1番目のプレステージ)
-├── rank.js           # 階位リセット (2番目のプレステージ)
-├── crown.js          # 冠位リセット (3番目のプレステージ)
-├── challenge.js      # 挑戦・P挑戦（制約付きプレイ）
-├── chip.js           # チップシステム
-├── statue.js         # 彫像（チップの強化）
-├── shine.js          # シャイン・ブライト・フリッカー通貨
-├── ring.js           # リング戦闘ミニゲーム
-├── trophy.js         # 実績・小実績
-├── world.js          # 複数ワールド・パイプ
-├── storage.js        # セーブ・ロード
-├── automation.js     # オートバイヤー
-├── remember.js       # 記憶システム
-├── levelshop.js      # 段位ショップ
-├── social.js         # Twitter共有
-├── time.js           # 時間水晶システム
-├── spirit.js         # 精霊システム（未完成）
-├── utils.js          # ユーティリティ関数
-├── break_infinity.js # 大数ライブラリ
-└── stylesheet.css    # スタイルシート
+└── game/
+    ├── game.js           # Vue app 本体、メインロジック
+    ├── constants.js      # 定数、初期データ生成 (initialData)
+    ├── generator.js      # 通常発生器 (8階層)
+    ├── accelerator.js    # 時間加速器 (8階層)
+    ├── dark.js           # ダーク発生器・ダークポイント
+    ├── light.js          # ライト発生器・ライトポイント
+    ├── level.js          # 段位リセット (1番目のプレステージ)
+    ├── rank.js           # 階位リセット (2番目のプレステージ)
+    ├── crown.js          # 冠位リセット (3番目のプレステージ)
+    ├── challenge.js      # 挑戦・P挑戦（制約付きプレイ）
+    ├── chip.js           # チップシステム
+    ├── statue.js         # 彫像（チップの強化）
+    ├── shine.js          # シャイン・ブライト・フリッカー通貨
+    ├── ring.js           # リング戦闘ミニゲーム
+    ├── trophy.js         # 実績・小実績
+    ├── world.js          # 複数ワールド・パイプ
+    ├── storage.js        # セーブ・ロード
+    ├── automation.js     # オートバイヤー
+    ├── remember.js       # 記憶システム
+    ├── levelshop.js      # 段位ショップ
+    ├── social.js         # Twitter共有
+    ├── time.js           # 時間水晶システム
+    ├── spirit.js         # 精霊システム（未完成）
+    ├── utils.js          # ユーティリティ関数
+    ├── break_infinity.js # 大数ライブラリ
+    └── stylesheet.css    # スタイルシート
 ```
 
 ---
 
 ## コアシステム解説
 
-### 1. 発生器システム (`generator.js`, `game.js`)
+### 1. 発生器システム (`game/generator.js`, `game/game.js`)
 
 8階層のカスケード式発生器。上位発生器が下位を生産し、最終的にポイント(`money`)を生成。
 
@@ -71,7 +72,7 @@
 
 ---
 
-### 2. 時間加速器 (`accelerator.js`)
+### 2. 時間加速器 (`game/accelerator.js`)
 
 ゲーム内時間の流れを加速。8階層があり、上位が下位を増加させる。
 
@@ -79,7 +80,7 @@
 
 ---
 
-### 3. ダーク/ライト発生器 (`dark.js`, `light.js`)
+### 3. ダーク/ライト発生器 (`game/dark.js`, `game/light.js`)
 
 通常発生器と別系統の高位発生器。
 
@@ -114,7 +115,7 @@
 
 ---
 
-### 5. 挑戦システム (`challenge.js`)
+### 5. 挑戦システム (`game/challenge.js`)
 
 制約付きプレイで報酬を獲得するシステム。
 
@@ -130,7 +131,7 @@
 
 ---
 
-### 6. チップ・彫像システム (`chip.js`, `statue.js`)
+### 6. チップ・彫像システム (`game/chip.js`, `game/statue.js`)
 
 昇段リセット時に獲得するチップで永続的な強化を行う。
 
@@ -146,7 +147,7 @@
 
 ---
 
-### 7. シャイン・ブライト・フリッカー (`shine.js`)
+### 7. シャイン・ブライト・フリッカー (`game/shine.js`)
 
 挑戦クリアで獲得確率が上昇する特殊通貨。
 
@@ -158,7 +159,7 @@
 
 ---
 
-### 8. リングシステム (`ring.js`)
+### 8. リングシステム (`game/ring.js`)
 
 ターン制ミニゲーム。リングを装備してミッションをクリア。
 
@@ -172,7 +173,7 @@
 
 ---
 
-### 9. ワールドシステム (`world.js`)
+### 9. ワールドシステム (`game/world.js`)
 
 12個の平行ワールドを管理。各ワールドで独立したセーブデータ。
 
@@ -180,7 +181,7 @@
 
 ---
 
-### 10. トロフィー・実績 (`trophy.js`)
+### 10. トロフィー・実績 (`game/trophy.js`)
 
 進行状況に応じて解放される実績システム。
 
@@ -190,7 +191,7 @@
 
 ---
 
-### 11. オートメーション (`automation.js`)
+### 11. オートメーション (`game/automation.js`)
 
 自動購入・自動リセット機能。
 
@@ -204,7 +205,7 @@
 
 ---
 
-### 12. セーブ・ロード (`storage.js`)
+### 12. セーブ・ロード (`game/storage.js`)
 
 **保存形式:**
 
@@ -220,7 +221,7 @@ localStorage.setItem("playerStoredb", btoa(JSON.stringify(players)));
 
 ---
 
-## プレイヤーデータ構造 (`constants.js`)
+## プレイヤーデータ構造 (`game/constants.js`)
 
 主要なプレイヤー変数の一覧:
 
@@ -299,7 +300,7 @@ localStorage.setItem("playerStoredb", btoa(JSON.stringify(players)));
 
 ---
 
-## ゲームループ (`game.js` - `update()`)
+## ゲームループ (`game/game.js` - `update()`)
 
 毎秒（`tickspeed` ミリ秒ごと）に実行:
 
@@ -339,16 +340,16 @@ data.player.rankchallengebonuses.includes(14);
 
 ### 新機能追加の流れ
 
-1. `constants.js` の `initialData()` にプレイヤー変数追加
-2. `storage.js` の `load()` で Decimal 復元処理追加（必要な場合）
+1. `game/constants.js` の `initialData()` にプレイヤー変数追加
+2. `game/storage.js` の `load()` で Decimal 復元処理追加（必要な場合）
 3. 機能用の新JSファイル作成
-4. `game.js` でデータオブジェクト追加（例: `xxxdata: new Xxxdata()`）
+4. `game/game.js` でデータオブジェクト追加（例: `xxxdata: new Xxxdata()`）
 5. `index.html` で `<script>` タグ追加
 6. UIをHTMLに追加
 
 ---
 
-## 定数一覧 (`constants.js`)
+## 定数一覧 (`game/constants.js`)
 
 | 定数名           | 値  | 説明                       |
 | ---------------- | --- | -------------------------- |
@@ -363,7 +364,7 @@ data.player.rankchallengebonuses.includes(14);
 
 ## 既知の未完成・WIP機能
 
-1. **精霊システム** (`spirit.js`) - ほぼ空の状態
+1. **精霊システム** (`game/spirit.js`) - ほぼ空の状態
 2. **キャンペーン** - クリスマスキャンペーン等のコードが残存
 
 ---
@@ -371,7 +372,7 @@ data.player.rankchallengebonuses.includes(14);
 ## 外部依存
 
 - **Vue.js 3** (CDN)
-- **break_infinity.js** - 1e308を超える大数を扱うライブラリ
+- **game/break_infinity.js** - 1e308を超える大数を扱うライブラリ
 - **deepmerge** - セーブデータマージ用
 
 ---
